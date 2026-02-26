@@ -1,0 +1,25 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "edushare-5259a",
+          "appId": "1:826052245198:android:27856495b345a5c109c29f",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "edushare-5259a",
+          "configurations": {
+            "android": "1:826052245198:android:27856495b345a5c109c29f",
+            "ios": "1:826052245198:ios:f52110dda1cdee8e09c29f",
+            "macos": "1:826052245198:ios:f52110dda1cdee8e09c29f",
+            "web": "1:826052245198:web:9ca58dc223f1633709c29f",
+            "windows": "1:826052245198:web:a2f79a8737a8514409c29f"
+          }
+        }
+      }
+    }
+  }
+}

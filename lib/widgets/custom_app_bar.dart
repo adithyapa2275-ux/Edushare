@@ -1,0 +1,245 @@
+import 'package:flutter/material.dart';
+import '../core/colors.dart';
+import '../core/text_styles.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../providers/search_provider.dart';
+import '../providers/user_provider.dart';
+import 'dart:io';
+
+class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const CustomAppBar({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+
+    return AppBar(
+      backgroundColor: Colors.white,
+      elevation: 0,
+      titleSpacing: 0,
+      title: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: isMobile
+            ? Text(
+                'EduShare',
+                style: AppTextStyles.h2.copyWith(color: AppColors.primary),
+              )
+            : Row(
+                children: [
+                  // Logo
+                  InkWell(
+                    onTap: () => context.go('/home'),
+                    child: Text(
+                      'EduShare',
+                      style: AppTextStyles.h2.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 40),
+                  // Search Bar
+                  Expanded(
+                    child: Container(
+                      height: 40,
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.background,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: AppColors.divider),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.search,
+                            color: AppColors.textSecondary,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: TextField(
+                              onChanged: (value) {
+                                try {
+                                  Provider.of<SearchProvider>(
+                                    context,
+                                    listen: false,
+                                  ).setQuery(value);
+                                } catch (e) {
+                                  // Handle provider not found
+                                }
+                              },
+                              decoration: InputDecoration(
+                                hintText: 'Search for books, authors...',
+                                hintStyle: AppTextStyles.bodyMedium,
+                                border: InputBorder.none,
+                                isDense: true,
+                                contentPadding: EdgeInsets.zero,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+      ),
+      actions: isMobile
+          ? [
+              IconButton(
+                // Mobile Search Icon
+                icon: const Icon(Icons.search, color: AppColors.textPrimary),
+                onPressed: () {
+                  // Ideally show search bar, but for now just focus or navigate?
+                  // Since we can't easily toggle state in this Stateless widget without refactor,
+                  // let's just leave it as a placeholder or maybe show a dialog.
+                  // For this bug fix, avoiding overflow is priority.
+                },
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.shopping_cart_outlined,
+                  color: AppColors.textPrimary,
+                ),
+                onPressed: () => context.push('/cart'),
+              ),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.menu, color: AppColors.textPrimary),
+                onSelected: (value) {
+                  if (value == 'home') context.go('/home');
+                  if (value == 'orders') context.push('/orders');
+                  if (value == 'favorites') context.push('/favorites');
+                  if (value == 'listings') context.push('/my_listings');
+                  if (value == 'sell') context.push('/sell');
+                  if (value == 'profile') context.push('/profile');
+                },
+                itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                  const PopupMenuItem<String>(
+                    value: 'home',
+                    child: ListTile(
+                      leading: Icon(Icons.home),
+                      title: Text('Home'),
+                    ),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'orders',
+                    child: ListTile(
+                      leading: Icon(Icons.history),
+                      title: Text('My Orders'),
+                    ),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'favorites',
+                    child: ListTile(
+                      leading: Icon(Icons.favorite_border),
+                      title: Text('Favorites'),
+                    ),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'listings',
+                    child: ListTile(
+                      leading: Icon(Icons.list_alt),
+                      title: Text('My Listings'),
+                    ),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'sell',
+                    child: ListTile(
+                      leading: Icon(Icons.storefront),
+                      title: Text('Sell Book'),
+                    ),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'profile',
+                    child: ListTile(
+                      leading: Icon(Icons.person),
+                      title: Text('Profile'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 8),
+            ]
+          : [
+              IconButton(
+                icon: const Icon(Icons.home, color: AppColors.textPrimary),
+                tooltip: 'Home',
+                onPressed: () => context.go('/home'),
+              ),
+              IconButton(
+                icon: const Icon(Icons.history, color: AppColors.textPrimary),
+                tooltip: 'My Orders',
+                onPressed: () => context.push('/orders'),
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.favorite_border,
+                  color: AppColors.textPrimary,
+                ),
+                onPressed: () => context.push('/favorites'),
+              ),
+              IconButton(
+                icon: const Icon(Icons.list_alt, color: AppColors.textPrimary),
+                tooltip: 'My Listings',
+                onPressed: () => context.push('/my_listings'),
+              ),
+              IconButton(
+                icon: const Icon(
+                  Icons.shopping_cart_outlined,
+                  color: AppColors.textPrimary,
+                ),
+                onPressed: () => context.push('/cart'),
+              ),
+              const SizedBox(width: 8),
+              TextButton.icon(
+                onPressed: () => context.push('/sell'),
+                icon: const Icon(Icons.storefront, color: AppColors.primary),
+                label: const Text(
+                  'SELL',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.primary,
+                  ),
+                ),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  backgroundColor: AppColors.primary.withOpacity(0.1),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: GestureDetector(
+                  onTap: () => context.push('/profile'),
+                  child: Consumer<UserProvider>(
+                    builder: (context, user, _) {
+                      return CircleAvatar(
+                        backgroundColor: AppColors.secondary,
+                        radius: 16,
+                        backgroundImage:
+                            user.profileImage.isNotEmpty &&
+                                !user.profileImage.startsWith('http')
+                            ? FileImage(File(user.profileImage))
+                                  as ImageProvider
+                            : (user.profileImage.startsWith('http')
+                                  ? NetworkImage(user.profileImage)
+                                  : null),
+                        child: user.profileImage.isEmpty
+                            ? Text(
+                                user.name.isNotEmpty
+                                    ? user.name[0].toUpperCase()
+                                    : 'U',
+                                style: AppTextStyles.button,
+                              )
+                            : null,
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+    );
+  }
+
+  @override
+  Size get preferredSize => const Size.fromHeight(64);
+}

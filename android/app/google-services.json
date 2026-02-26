@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "826052245198",
+    "project_id": "edushare-5259a",
+    "storage_bucket": "edushare-5259a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:826052245198:android:27856495b345a5c109c29f",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_2"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC9jc5EvyzqfFq0G8tlirv2fE05enXIf94"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
