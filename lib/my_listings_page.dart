@@ -24,6 +24,9 @@ class MyListingsPage extends StatelessWidget {
             Expanded(
               child: Consumer<SellProvider>(
                 builder: (context, sellProvider, child) {
+                  if (sellProvider.isLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
                   if (sellProvider.userListings.isEmpty) {
                     return Center(
                       child: Column(

@@ -114,7 +114,7 @@ class OrdersPage extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                "\$${(entry.key.price * entry.value).toStringAsFixed(2)}",
+                                "₹${(entry.key.price * entry.value).toStringAsFixed(2)}",
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -129,7 +129,7 @@ class OrdersPage extends StatelessWidget {
                         children: [
                           const Text("Total Amount"),
                           Text(
-                            "\$${order.totalAmount.toStringAsFixed(2)}",
+                            "₹${order.totalAmount.toStringAsFixed(2)}",
                             style: AppTextStyles.h2.copyWith(fontSize: 16),
                           ),
                         ],

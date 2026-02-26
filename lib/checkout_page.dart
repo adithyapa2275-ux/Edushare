@@ -239,7 +239,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                "\$${(entry.key.price * entry.value).toStringAsFixed(2)}",
+                                "₹${(entry.key.price * entry.value).toStringAsFixed(2)}",
                                 style: AppTextStyles.h3.copyWith(fontSize: 16),
                               ),
                             ],
@@ -258,7 +258,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     Text(
-                      "\$${_totalPrice.toStringAsFixed(2)}",
+                      "₹${_totalPrice.toStringAsFixed(2)}",
                       style: AppTextStyles.h2.copyWith(fontSize: 18),
                     ),
                   ],

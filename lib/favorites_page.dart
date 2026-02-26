@@ -107,7 +107,7 @@ class FavoritesPage extends StatelessWidget {
                               overflow: TextOverflow.ellipsis,
                             ),
                             const SizedBox(height: 4),
-                            Text("\$${book.price}", style: AppTextStyles.h3),
+                            Text("₹${book.price}", style: AppTextStyles.h3),
                           ],
                         ),
                       ),

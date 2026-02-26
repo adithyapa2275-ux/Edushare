@@ -110,7 +110,7 @@ class _BookCardState extends State<BookCard> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          '\$${widget.book.price}',
+                          '₹${widget.book.price}',
                           style: AppTextStyles.h3.copyWith(
                             color: AppColors.secondary,
                           ),

@@ -106,9 +106,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 icon: const Icon(Icons.menu, color: AppColors.textPrimary),
                 onSelected: (value) {
                   if (value == 'home') context.go('/home');
-                  if (value == 'orders') context.push('/orders');
-                  if (value == 'favorites') context.push('/favorites');
-                  if (value == 'listings') context.push('/my_listings');
+                  if (value == 'orders') context.go('/orders');
+                  if (value == 'favorites') context.go('/favorites');
+                  if (value == 'listings') context.go('/my_listings');
                   if (value == 'sell') context.push('/sell');
                   if (value == 'profile') context.push('/profile');
                 },
@@ -168,19 +168,19 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               IconButton(
                 icon: const Icon(Icons.history, color: AppColors.textPrimary),
                 tooltip: 'My Orders',
-                onPressed: () => context.push('/orders'),
+                onPressed: () => context.go('/orders'),
               ),
               IconButton(
                 icon: const Icon(
                   Icons.favorite_border,
                   color: AppColors.textPrimary,
                 ),
-                onPressed: () => context.push('/favorites'),
+                onPressed: () => context.go('/favorites'),
               ),
               IconButton(
                 icon: const Icon(Icons.list_alt, color: AppColors.textPrimary),
                 tooltip: 'My Listings',
-                onPressed: () => context.push('/my_listings'),
+                onPressed: () => context.go('/my_listings'),
               ),
               IconButton(
                 icon: const Icon(

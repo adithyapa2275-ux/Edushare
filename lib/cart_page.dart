@@ -110,7 +110,7 @@ class CartPage extends StatelessWidget {
   Widget _buildPriceDetails(BuildContext context, CartProvider cart) {
     double total = cart.totalPrice;
     double discount = total * 0.1; // 10% discount
-    double deliveryCharges = total > 500 ? 0 : 40;
+    double deliveryCharges = total >= 700 ? 0 : 50;
     double finalAmount = total - discount + deliveryCharges;
 
     return Container(
@@ -139,18 +139,18 @@ class CartPage extends StatelessWidget {
           const Divider(height: 24),
           _priceRow(
             "Price (${cart.itemCount} items)",
-            "\$${total.toStringAsFixed(2)}",
+            "₹${total.toStringAsFixed(2)}",
           ),
           _priceRow(
             "Discount",
-            "-\$${discount.toStringAsFixed(2)}",
+            "-₹${discount.toStringAsFixed(2)}",
             color: AppColors.success,
           ),
           _priceRow(
             "Delivery Charges",
             deliveryCharges == 0
                 ? "FREE"
-                : "\$${deliveryCharges.toStringAsFixed(2)}",
+                : "₹${deliveryCharges.toStringAsFixed(2)}",
             color: AppColors.success,
           ),
           const Divider(height: 24, thickness: 1),
@@ -162,14 +162,14 @@ class CartPage extends StatelessWidget {
                 style: AppTextStyles.h2.copyWith(fontSize: 18),
               ),
               Text(
-                "\$${finalAmount.toStringAsFixed(2)}",
+                "₹${finalAmount.toStringAsFixed(2)}",
                 style: AppTextStyles.h2.copyWith(fontSize: 18),
               ),
             ],
           ),
           const SizedBox(height: 16),
           Text(
-            "You will save \$${discount.toStringAsFixed(2)} on this order",
+            "You will save ₹${discount.toStringAsFixed(2)} on this order",
             style: const TextStyle(
               color: AppColors.success,
               fontWeight: FontWeight.w500,
@@ -225,7 +225,7 @@ class CartPage extends StatelessWidget {
   Widget _buildBottomBar(BuildContext context, CartProvider cart) {
     double total = cart.totalPrice;
     double discount = total * 0.1;
-    double deliveryCharges = total > 500 ? 0 : 40;
+    double deliveryCharges = total >= 700 ? 0 : 50;
     double finalAmount = total - discount + deliveryCharges;
 
     return Container(
@@ -248,7 +248,7 @@ class CartPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "\$${finalAmount.toStringAsFixed(2)}",
+                  "₹${finalAmount.toStringAsFixed(2)}",
                   style: AppTextStyles.h2.copyWith(fontSize: 18),
                 ),
                 const Text(
@@ -344,12 +344,12 @@ class _CartItemTile extends StatelessWidget {
                     Row(
                       children: [
                         Text(
-                          "\$${book.price}",
+                          "₹${book.price}",
                           style: AppTextStyles.h3.copyWith(fontSize: 18),
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          "\$${(book.price * 1.1).toStringAsFixed(2)}",
+                          "₹${(book.price * 1.1).toStringAsFixed(2)}",
                           style: AppTextStyles.bodySmall.copyWith(
                             decoration: TextDecoration.lineThrough,
                           ),

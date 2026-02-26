@@ -212,12 +212,12 @@ class _DesktopLayout extends StatelessWidget {
                 textBaseline: TextBaseline.alphabetic,
                 children: [
                   Text(
-                    '\$${book.price}',
+                    '₹${book.price}',
                     style: AppTextStyles.h1.copyWith(fontSize: 32),
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '\$${(book.price * 1.2).toStringAsFixed(2)}', // Mock original price
+                    '₹${(book.price * 1.2).toStringAsFixed(2)}', // Mock original price
                     style: AppTextStyles.bodyMedium.copyWith(
                       decoration: TextDecoration.lineThrough,
                       color: Colors.grey,
@@ -348,7 +348,7 @@ class _MobileLayout extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('\$${book.price}', style: AppTextStyles.h1),
+            Text('₹${book.price}', style: AppTextStyles.h1),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(

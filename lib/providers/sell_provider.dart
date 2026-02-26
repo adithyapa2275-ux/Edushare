@@ -5,8 +5,10 @@ import '../models/book.dart';
 
 class SellProvider extends ChangeNotifier {
   final List<Book> _userListings = [];
+  bool _isLoading = false;
 
   List<Book> get userListings => _userListings;
+  bool get isLoading => _isLoading;
 
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -22,17 +24,27 @@ class SellProvider extends ChangeNotifier {
   }
 
   Future<void> loadListings() async {
-    final user = _auth.currentUser;
-    if (user != null) {
-      final snapshot = await _db
-          .collection('listings')
-          .where('sellerId', isEqualTo: user.uid)
-          .get();
-      _userListings.clear();
-      for (var doc in snapshot.docs) {
-        _userListings.add(Book.fromMap(doc.data(), doc.id));
+    _isLoading = true; // Set loading to true
+    notifyListeners(); // Notify listeners about loading state change
+
+    try {
+      final user = _auth.currentUser;
+      if (user != null) {
+        final snapshot = await _db
+            .collection('listings')
+            .where('sellerId', isEqualTo: user.uid)
+            .get();
+        _userListings.clear();
+        for (var doc in snapshot.docs) {
+          _userListings.add(Book.fromMap(doc.data(), doc.id));
+        }
       }
-      notifyListeners();
+    } catch (e) {
+      // Handle error, e.g., print to console or show a snackbar
+      print("Error loading listings: $e");
+    } finally {
+      _isLoading = false; // Set loading to false
+      notifyListeners(); // Notify listeners about loading state change and data update
     }
   }
 

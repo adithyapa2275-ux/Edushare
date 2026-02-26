@@ -54,7 +54,7 @@ class Book {
 
     // Randomize Price and Rating since API doesn't provide them
     final random = Random();
-    double price = (random.nextInt(1000) + 200).toDouble(); // 200 - 1200
+    double price = 50.0 + random.nextDouble() * 650.0; // 50 - 700
     double rating = 3.0 + random.nextDouble() * 2.0; // 3.0 - 5.0
     int reviewCount = random.nextInt(5000) + 50;
 
@@ -260,7 +260,7 @@ class Book {
         author: 'Robert C. Martin',
         description:
             'A Handbook of Agile Software Craftsmanship. Essential for every developer.',
-        price: 950.00,
+        price: 600.00,
         rating: 4.8,
         reviewCount: 4500,
         imageUrl:
@@ -273,7 +273,7 @@ class Book {
         title: 'Flutter Apprentice',
         author: 'Ray Wenderlich',
         description: 'Learn to build cross-platform apps with Flutter.',
-        price: 1100.00,
+        price: 650.00,
         rating: 4.9,
         reviewCount: 1200,
         imageUrl:
@@ -287,7 +287,7 @@ class Book {
         title: 'Medical-Surgical Nursing',
         author: 'Brunner & Suddarth',
         description: 'The best-selling textbook for medical-surgical nursing.',
-        price: 2500.00,
+        price: 699.00,
         rating: 4.7,
         reviewCount: 800,
         imageUrl:
@@ -299,7 +299,7 @@ class Book {
         title: 'Anatomy and Physiology',
         author: 'Ross & Wilson',
         description: 'Foundations of anatomy and physiology for nurses.',
-        price: 1200.00,
+        price: 599.00,
         rating: 4.6,
         reviewCount: 1500,
         imageUrl:
@@ -313,7 +313,7 @@ class Book {
         title: 'Structural Analysis',
         author: 'R.C. Hibbeler',
         description: 'Comprehensive guide to structural analysis.',
-        price: 850.00,
+        price: 550.00,
         rating: 4.5,
         reviewCount: 600,
         imageUrl:
