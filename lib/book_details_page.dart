@@ -26,7 +26,7 @@ class _BookDetailsPageState extends State<BookDetailsPage> {
     final isMobile = MediaQuery.of(context).size.width < 800;
 
     return Scaffold(
-      backgroundColor: AppColors.surface, // Flipkart uses white/light grey
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const CustomAppBar(),
       body: SingleChildScrollView(
         child: Padding(
@@ -75,7 +75,7 @@ class _DesktopLayout extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                 ),
                 padding: const EdgeInsets.all(16),
-                child: _buildBookImage(book.imageUrl, height: 450),
+                child: _buildBookImage(context, book.imageUrl, height: 450),
               ),
               const SizedBox(height: 24),
               Row(
@@ -322,7 +322,7 @@ class _MobileLayout extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Center(child: _buildBookImage(book.imageUrl, height: 300)),
+        Center(child: _buildBookImage(context, book.imageUrl, height: 300)),
         const SizedBox(height: 24),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -404,8 +404,8 @@ class _MobileLayout extends StatelessWidget {
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.black,
+                  backgroundColor: Theme.of(context).cardColor,
+                  foregroundColor: Theme.of(context).textTheme.bodyLarge?.color,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(2),
@@ -439,31 +439,45 @@ class _MobileLayout extends StatelessWidget {
 }
 
 // Helper for displaying book image (Network or File)
-Widget _buildBookImage(String imageUrl, {double? height}) {
+Widget _buildBookImage(
+  BuildContext context,
+  String imageUrl, {
+  double? height,
+}) {
   if (imageUrl.startsWith('http') || imageUrl.startsWith('blob:') || kIsWeb) {
     return Image.network(
       imageUrl,
       height: height,
       fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) => _buildErrorImage(height),
+      errorBuilder: (context, error, stackTrace) =>
+          _buildErrorImage(context, height),
     );
   } else if (imageUrl.isNotEmpty) {
     return Image.file(
       File(imageUrl),
       height: height,
       fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) => _buildErrorImage(height),
+      errorBuilder: (context, error, stackTrace) =>
+          _buildErrorImage(context, height),
     );
   }
-  return _buildErrorImage(height);
+  return _buildErrorImage(context, height);
 }
 
-Widget _buildErrorImage(double? height) {
+Widget _buildErrorImage(BuildContext context, double? height) {
   return Container(
     height: height,
     width: height != null ? height * 0.6 : null,
-    color: Colors.grey[200],
-    child: const Center(child: Icon(Icons.book, size: 48, color: Colors.grey)),
+    color: Theme.of(context).brightness == Brightness.dark
+        ? Colors.grey[800]
+        : Colors.grey[200],
+    child: Center(
+      child: Icon(
+        Icons.book,
+        size: 48,
+        color: Theme.of(context).iconTheme.color,
+      ),
+    ),
   );
 }
 

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'models/book.dart';
-import 'core/colors.dart';
 import 'core/text_styles.dart';
 import 'package:provider/provider.dart';
 import 'providers/cart_provider.dart';
@@ -88,11 +87,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Checkout'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.iconTheme?.color,
       ),
       body: Stepper(
         type: StepperType.vertical,
@@ -171,7 +170,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(
+                  color:
+                      Theme.of(context).dividerTheme.color ??
+                      Theme.of(context).dividerColor,
+                ),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Column(

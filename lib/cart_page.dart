@@ -13,7 +13,7 @@ class CartPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const CustomAppBar(),
       body: Consumer<CartProvider>(
         builder: (context, cart, child) {
@@ -124,7 +124,7 @@ class CartPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(4),
         boxShadow: [
           BoxShadow(
@@ -146,15 +146,18 @@ class CartPage extends StatelessWidget {
           ),
           const Divider(height: 24),
           _priceRow(
+            context,
             "Price (${cart.itemCount} items)",
             "₹${total.toStringAsFixed(2)}",
           ),
           _priceRow(
+            context,
             "Discount",
             "-₹${discount.toStringAsFixed(2)}",
             color: AppColors.success,
           ),
           _priceRow(
+            context,
             "Delivery Charges",
             deliveryCharges == 0
                 ? "FREE"
@@ -210,7 +213,12 @@ class CartPage extends StatelessWidget {
     );
   }
 
-  Widget _priceRow(String label, String value, {Color? color}) {
+  Widget _priceRow(
+    BuildContext context,
+    String label,
+    String value, {
+    Color? color,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -221,7 +229,7 @@ class CartPage extends StatelessWidget {
             value,
             style: TextStyle(
               fontSize: 14,
-              color: color ?? Colors.black,
+              color: color ?? Theme.of(context).textTheme.bodyLarge?.color,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -244,7 +252,7 @@ class CartPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.1),
@@ -320,7 +328,7 @@ class _CartItemTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(4),
         border: Border.all(color: Colors.grey.shade200),
       ),
@@ -431,11 +439,11 @@ class _QuantityButton extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         border: Border.all(color: Colors.grey.shade300),
-        color: Colors.white,
+        color: Theme.of(context).cardColor,
       ),
       child: IconButton(
         padding: EdgeInsets.zero,
-        icon: Icon(icon, size: 16, color: Colors.black),
+        icon: Icon(icon, size: 16, color: Theme.of(context).iconTheme.color),
         onPressed: onPressed,
       ),
     );

@@ -11,6 +11,7 @@ import 'checkout_page.dart';
 import 'models/book.dart';
 import 'core/app_theme.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 import 'providers/cart_provider.dart';
@@ -21,6 +22,7 @@ import 'providers/sell_provider.dart';
 import 'providers/user_provider.dart';
 import 'providers/marketplace_provider.dart';
 import 'providers/admin_provider.dart';
+import 'providers/theme_provider.dart';
 import 'orders_page.dart';
 import 'favorites_page.dart';
 import 'sell_book_page.dart';
@@ -45,6 +47,26 @@ class MyScrollBehavior extends MaterialScrollBehavior {
 
 final GoRouter _router = GoRouter(
   initialLocation: '/',
+  redirect: (context, state) {
+    final user = FirebaseAuth.instance.currentUser;
+    final bool isLoggingIn =
+        state.matchedLocation == '/login' || state.matchedLocation == '/';
+    final bool isRegistering = state.matchedLocation == '/register';
+
+    if (user == null) {
+      // Not logged in -> can only be on login or register
+      if (!isLoggingIn && !isRegistering) return '/login';
+      return null;
+    }
+
+    // Logged in -> shouldn't be on login or register
+    if (isLoggingIn || isRegistering) {
+      if (user.email == 'admin@edushare.com') return '/admin';
+      return '/home';
+    }
+
+    return null;
+  },
   routes: [
     GoRoute(path: '/', builder: (context, state) => const LoginPage()),
     GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
@@ -111,13 +133,22 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (context) => UserProvider()),
         ChangeNotifierProvider(create: (context) => MarketplaceProvider()),
         ChangeNotifierProvider(create: (context) => AdminProvider()),
+        ChangeNotifierProvider(create: (context) => ThemeProvider()),
       ],
-      child: MaterialApp.router(
-        title: 'EduShare',
-        theme: AppTheme.lightTheme,
-        scrollBehavior: MyScrollBehavior(),
-        routerConfig: _router,
-        debugShowCheckedModeBanner: false,
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp.router(
+            title: 'EduShare',
+            theme: AppTheme.lightTheme,
+            darkTheme: AppTheme.darkTheme,
+            themeMode: themeProvider.themeMode,
+            themeAnimationDuration: const Duration(milliseconds: 600),
+            themeAnimationCurve: Curves.easeInOut,
+            scrollBehavior: MyScrollBehavior(),
+            routerConfig: _router,
+            debugShowCheckedModeBanner: false,
+          );
+        },
       ),
     );
   }

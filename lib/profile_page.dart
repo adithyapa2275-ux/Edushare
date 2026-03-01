@@ -111,7 +111,7 @@ class _ProfilePageState extends State<ProfilePage> {
     }
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const CustomAppBar(),
       body: user.isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -122,7 +122,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   constraints: const BoxConstraints(maxWidth: 600),
                   padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: const [
                       BoxShadow(
@@ -142,9 +142,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           children: [
                             CircleAvatar(
                               radius: 60,
-                              backgroundColor: AppColors.primary.withOpacity(
-                                0.1,
-                              ),
+                              backgroundColor: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.1),
                               backgroundImage: user.profileImage.isNotEmpty
                                   ? (user.profileImage.startsWith('http')
                                         ? NetworkImage(user.profileImage)
@@ -163,10 +163,10 @@ class _ProfilePageState extends State<ProfilePage> {
                                       user.name.isNotEmpty
                                           ? user.name[0].toUpperCase()
                                           : 'U',
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontSize: 48,
                                         fontWeight: FontWeight.bold,
-                                        color: AppColors.primary,
+                                        color: Theme.of(context).primaryColor,
                                       ),
                                     )
                                   : null,
@@ -343,7 +343,11 @@ class _ProfilePageState extends State<ProfilePage> {
         prefixIcon: Icon(icon, color: AppColors.textSecondary),
         border: const OutlineInputBorder(),
         filled: !enabled,
-        fillColor: enabled ? null : Colors.grey[100],
+        fillColor: enabled
+            ? null
+            : (Theme.of(context).brightness == Brightness.dark
+                  ? Colors.grey[800]
+                  : Colors.grey[100]),
       ),
       validator: (value) => value!.isEmpty ? 'Please enter $label' : null,
     );

@@ -26,6 +26,7 @@ class _HomePageState extends State<HomePage> {
   Future<List<Book>> _nursingBooksFuture = Future.value([]);
   Future<List<Book>> _engineeringBooksFuture = Future.value([]);
   Future<List<Book>> _class12BooksFuture = Future.value([]);
+  Future<List<Book>> _donateBooksFuture = Future.value([]);
 
   final ApiService _apiService = ApiService();
 
@@ -51,13 +52,14 @@ class _HomePageState extends State<HomePage> {
         'Engineering India S.Chand',
       );
       _class12BooksFuture = _apiService.searchBooks('NCERT CBSE Class 12');
+      _donateBooksFuture = _apiService.searchBooks('free academic books');
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const CustomAppBar(),
       body: Consumer<SearchProvider>(
         builder: (context, searchProvider, child) {
@@ -122,6 +124,7 @@ class _HomePageState extends State<HomePage> {
             nursingBooksFuture: _nursingBooksFuture,
             engineeringBooksFuture: _engineeringBooksFuture,
             class12BooksFuture: _class12BooksFuture,
+            donateBooksFuture: _donateBooksFuture,
             onRetry: _fetchAllBooks,
           );
         },
@@ -136,6 +139,7 @@ class _HomePageContent extends StatelessWidget {
   final Future<List<Book>> nursingBooksFuture;
   final Future<List<Book>> engineeringBooksFuture;
   final Future<List<Book>> class12BooksFuture;
+  final Future<List<Book>> donateBooksFuture;
   final VoidCallback onRetry;
 
   const _HomePageContent({
@@ -144,6 +148,7 @@ class _HomePageContent extends StatelessWidget {
     required this.nursingBooksFuture,
     required this.engineeringBooksFuture,
     required this.class12BooksFuture,
+    required this.donateBooksFuture,
     required this.onRetry,
   });
 
@@ -154,6 +159,12 @@ class _HomePageContent extends StatelessWidget {
       child: Column(
         children: [
           const HeroBanner(),
+          _buildSection(
+            context,
+            '🎁 FREE / Donate Books',
+            donateBooksFuture,
+            'free books',
+          ),
           Consumer<MarketplaceProvider>(
             builder: (context, marketplace, child) {
               if (marketplace.recentListings.isNotEmpty) {

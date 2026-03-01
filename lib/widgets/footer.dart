@@ -8,7 +8,9 @@ class Footer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.primary,
+      color: Theme.of(context).brightness == Brightness.dark
+          ? Theme.of(context).cardColor
+          : AppColors.primary,
       padding: const EdgeInsets.all(48),
       child: Column(
         children: [
@@ -21,7 +23,11 @@ class Footer extends StatelessWidget {
                   children: [
                     Text(
                       'EduShare',
-                      style: AppTextStyles.h2.copyWith(color: Colors.white),
+                      style: AppTextStyles.h2.copyWith(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? Theme.of(context).textTheme.displayMedium?.color
+                            : Colors.white,
+                      ),
                     ),
                     const SizedBox(height: 16),
                     Text(

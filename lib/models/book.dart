@@ -19,6 +19,8 @@ class Book {
   final String? uploaderId;
   final DateTime? uploadedAt;
   final String thumbnail;
+  final bool isDonation;
+  final String isbn;
 
   const Book({
     required this.id,
@@ -38,6 +40,8 @@ class Book {
     this.uploaderId,
     this.uploadedAt,
     this.thumbnail = '',
+    this.isDonation = false,
+    this.isbn = '',
   });
 
   factory Book.fromOpenLibrary(Map<String, dynamic> json) {
@@ -105,6 +109,8 @@ class Book {
           ? Timestamp.fromDate(uploadedAt!)
           : FieldValue.serverTimestamp(),
       'thumbnail': thumbnail,
+      'isDonation': isDonation,
+      'isbn': isbn,
     };
   }
 
@@ -136,6 +142,8 @@ class Book {
       uploaderId: map['uploaderId'],
       uploadedAt: uploadedAt,
       thumbnail: map['thumbnail'] ?? map['imageUrl'] ?? '',
+      isDonation: map['isDonation'] ?? false,
+      isbn: map['isbn'] ?? '',
     );
   }
 

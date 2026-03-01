@@ -49,16 +49,6 @@ class _LoginPageState extends State<LoginPage>
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _animationController.forward();
-
-      // Auto-redirect if already logged in
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        if (user.email == 'admin@edushare.com') {
-          context.go('/admin');
-        } else {
-          context.go('/home');
-        }
-      }
     });
   }
 

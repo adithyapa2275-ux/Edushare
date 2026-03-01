@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/search_provider.dart';
 import '../providers/user_provider.dart';
+import '../providers/theme_provider.dart';
 import 'dart:io';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -15,7 +16,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     final isMobile = MediaQuery.of(context).size.width < 600;
 
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
       elevation: 0,
       titleSpacing: 0,
       title: Padding(
@@ -23,7 +24,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         child: isMobile
             ? Text(
                 'EduShare',
-                style: AppTextStyles.h2.copyWith(color: AppColors.primary),
+                style: AppTextStyles.h2.copyWith(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textPrimaryDark
+                      : AppColors.primary,
+                ),
               )
             : Row(
                 children: [
@@ -33,7 +38,9 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     child: Text(
                       'EduShare',
                       style: AppTextStyles.h2.copyWith(
-                        color: AppColors.primary,
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.textPrimaryDark
+                            : AppColors.primary,
                       ),
                     ),
                   ),
@@ -44,9 +51,13 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                       height: 40,
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       decoration: BoxDecoration(
-                        color: AppColors.background,
+                        color: Theme.of(context).scaffoldBackgroundColor,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppColors.divider),
+                        border: Border.all(
+                          color:
+                              Theme.of(context).dividerTheme.color ??
+                              AppColors.divider,
+                        ),
                       ),
                       child: Row(
                         children: [
@@ -85,19 +96,52 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       ),
       actions: isMobile
           ? [
+              Consumer<ThemeProvider>(
+                builder: (context, themeProvider, _) {
+                  return IconButton(
+                    icon: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: ScaleTransition(
+                            scale: animation,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Icon(
+                        themeProvider.isDarkMode
+                            ? Icons.light_mode
+                            : Icons.dark_mode,
+                        key: ValueKey<bool>(themeProvider.isDarkMode),
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                    ),
+                    onPressed: () => themeProvider.toggleTheme(),
+                  );
+                },
+              ),
               IconButton(
-                icon: const Icon(Icons.search, color: AppColors.textPrimary),
+                // Mobile Search Icon
+                icon: Icon(
+                  Icons.search,
+                  color: Theme.of(context).iconTheme.color,
+                ),
                 onPressed: () {},
               ),
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.shopping_cart_outlined,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).iconTheme.color,
                 ),
                 onPressed: () => context.go('/cart'),
               ),
               PopupMenuButton<String>(
-                icon: const Icon(Icons.menu, color: AppColors.textPrimary),
+                icon: Icon(
+                  Icons.menu,
+                  color: Theme.of(context).iconTheme.color,
+                ),
                 onSelected: (value) {
                   if (value == 'home') context.go('/home');
                   if (value == 'orders') context.go('/orders');
@@ -154,39 +198,77 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               const SizedBox(width: 8),
             ]
           : [
+              Consumer<ThemeProvider>(
+                builder: (context, themeProvider, _) {
+                  return IconButton(
+                    icon: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 400),
+                      transitionBuilder: (child, animation) {
+                        return FadeTransition(
+                          opacity: animation,
+                          child: ScaleTransition(
+                            scale: animation,
+                            child: child,
+                          ),
+                        );
+                      },
+                      child: Icon(
+                        themeProvider.isDarkMode
+                            ? Icons.light_mode
+                            : Icons.dark_mode,
+                        key: ValueKey<bool>(themeProvider.isDarkMode),
+                        color: Theme.of(context).iconTheme.color,
+                      ),
+                    ),
+                    onPressed: () => themeProvider.toggleTheme(),
+                  );
+                },
+              ),
               IconButton(
-                icon: const Icon(Icons.home, color: AppColors.textPrimary),
+                icon: Icon(
+                  Icons.home,
+                  color: Theme.of(context).iconTheme.color,
+                ),
                 tooltip: 'Home',
                 onPressed: () => context.go('/home'),
               ),
               IconButton(
-                icon: const Icon(Icons.history, color: AppColors.textPrimary),
+                icon: Icon(
+                  Icons.history,
+                  color: Theme.of(context).iconTheme.color,
+                ),
                 tooltip: 'My Orders',
                 onPressed: () => context.go('/orders'),
               ),
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.favorite_border,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).iconTheme.color,
                 ),
                 onPressed: () => context.go('/favorites'),
               ),
               IconButton(
-                icon: const Icon(Icons.list_alt, color: AppColors.textPrimary),
+                icon: Icon(
+                  Icons.list_alt,
+                  color: Theme.of(context).iconTheme.color,
+                ),
                 tooltip: 'My Listings',
                 onPressed: () => context.go('/my_listings'),
               ),
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.shopping_cart_outlined,
-                  color: AppColors.textPrimary,
+                  color: Theme.of(context).iconTheme.color,
                 ),
                 onPressed: () => context.go('/cart'),
               ),
               const SizedBox(width: 8),
               TextButton.icon(
                 onPressed: () => context.go('/sell'),
-                icon: const Icon(Icons.storefront, color: AppColors.primary),
+                icon: Icon(
+                  Icons.storefront,
+                  color: Theme.of(context).iconTheme.color,
+                ),
                 label: const Text(
                   'SELL',
                   style: TextStyle(

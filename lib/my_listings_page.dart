@@ -12,7 +12,7 @@ class MyListingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const CustomAppBar(),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -65,7 +65,7 @@ class MyListingsPage extends StatelessWidget {
                             top: 8,
                             right: 8,
                             child: CircleAvatar(
-                              backgroundColor: Colors.white,
+                              backgroundColor: Theme.of(context).cardColor,
                               radius: 14,
                               child: IconButton(
                                 icon: const Icon(

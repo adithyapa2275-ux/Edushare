@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'core/colors.dart';
 import 'core/text_styles.dart';
+import 'core/api_service.dart';
 import 'models/book.dart';
 import 'providers/sell_provider.dart';
 import 'widgets/custom_app_bar.dart';
@@ -27,9 +28,37 @@ class _SellBookPageState extends State<SellBookPage> {
   final _priceController = TextEditingController();
   final _descController = TextEditingController();
   final _imageUrlController = TextEditingController();
+  final _isbnController = TextEditingController();
   XFile? _pickedFile;
 
+  bool _isDonation = false;
   bool _isSubmitting = false;
+  bool _isLoadingISBN = false;
+
+  void _lookupISBN() async {
+    if (_isbnController.text.isEmpty) return;
+
+    setState(() => _isLoadingISBN = true);
+    final ApiService apiService = ApiService();
+    final book = await apiService.fetchBookByISBN(_isbnController.text);
+
+    if (book != null && mounted) {
+      setState(() {
+        _titleController.text = book.title;
+        _authorController.text = book.author;
+        _descController.text = book.description;
+        _imageUrlController.text = book.imageUrl;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Book details auto-filled!')),
+      );
+    } else if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Book not found for this ISBN.')),
+      );
+    }
+    setState(() => _isLoadingISBN = false);
+  }
 
   void _submitForm() async {
     if (_formKey.currentState!.validate()) {
@@ -76,10 +105,14 @@ class _SellBookPageState extends State<SellBookPage> {
         title: _titleController.text,
         author: _authorController.text,
         description: _descController.text,
-        price: double.tryParse(_priceController.text) ?? 0.0,
+        price: _isDonation
+            ? 0.0
+            : (double.tryParse(_priceController.text) ?? 0.0),
         rating: 0.0,
         reviewCount: 0,
         imageUrl: imageUrl,
+        isDonation: _isDonation,
+        isbn: _isbnController.text,
       );
 
       if (!mounted) return;
@@ -97,7 +130,7 @@ class _SellBookPageState extends State<SellBookPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const CustomAppBar(),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -106,13 +139,13 @@ class _SellBookPageState extends State<SellBookPage> {
             constraints: const BoxConstraints(maxWidth: 600),
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                  color: Colors.black12,
+                  color: Colors.black.withOpacity(0.1),
                   blurRadius: 10,
-                  offset: Offset(0, 5),
+                  offset: const Offset(0, 5),
                 ),
               ],
             ),
@@ -123,11 +156,75 @@ class _SellBookPageState extends State<SellBookPage> {
                 children: [
                   Text(
                     'Sell Your Book',
-                    style: AppTextStyles.h2.copyWith(color: AppColors.primary),
+                    style: AppTextStyles.h2.copyWith(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.primary,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   const Text('Enter details to list your book for sale.'),
                   const SizedBox(height: 32),
+
+                  // ISBN Lookup
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextFormField(
+                          controller: _isbnController,
+                          decoration: const InputDecoration(
+                            labelText: 'ISBN (Auto-fill)',
+                            hintText: 'e.g. 9780132350884',
+                            border: OutlineInputBorder(),
+                            prefixIcon: Icon(Icons.qr_code),
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      SizedBox(
+                        height: 56,
+                        child: ElevatedButton(
+                          onPressed: _isLoadingISBN ? null : _lookupISBN,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: _isLoadingISBN
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Text('FILL'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Donation Switch
+                  SwitchListTile(
+                    title: const Text(
+                      'Free / Donate this book',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    subtitle: const Text(
+                      'Give this book for free to help fellow students.',
+                    ),
+                    value: _isDonation,
+                    activeColor: AppColors.secondary,
+                    onChanged: (val) {
+                      setState(() {
+                        _isDonation = val;
+                        if (val) _priceController.text = '0';
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 24),
 
                   // Title
                   TextFormField(

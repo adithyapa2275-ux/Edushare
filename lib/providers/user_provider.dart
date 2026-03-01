@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UserProvider extends ChangeNotifier {
   String _name = '';
@@ -24,6 +25,7 @@ class UserProvider extends ChangeNotifier {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   UserProvider() {
+    _loadFromLocalCache(); // Load cached data instantly
     _auth.authStateChanges().listen((user) {
       if (user != null) {
         loadUserData();
@@ -31,6 +33,31 @@ class UserProvider extends ChangeNotifier {
         clearData();
       }
     });
+  }
+
+  Future<void> _loadFromLocalCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _name = prefs.getString('user_name') ?? '';
+      _profileImage = prefs.getString('user_profile_image') ?? '';
+      _email = prefs.getString('user_email') ?? '';
+      if (_name.isNotEmpty || _profileImage.isNotEmpty) {
+        notifyListeners();
+      }
+    } catch (e) {
+      print('UserProvider: Error loading from cache: $e');
+    }
+  }
+
+  Future<void> _saveToLocalCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_name', _name);
+      await prefs.setString('user_profile_image', _profileImage);
+      await prefs.setString('user_email', _email);
+    } catch (e) {
+      print('UserProvider: Error saving to cache: $e');
+    }
   }
 
   Future<void> loadUserData() async {
@@ -62,6 +89,7 @@ class UserProvider extends ChangeNotifier {
         _email = user.email ?? '';
       } finally {
         _isLoading = false;
+        _saveToLocalCache(); // Update cache with fresh Firestore data
         notifyListeners();
       }
     } else {
@@ -78,7 +106,17 @@ class UserProvider extends ChangeNotifier {
     _profileImage = '';
     _isAdmin = false;
     _isLoading = false;
+    _clearLocalCache();
     notifyListeners();
+  }
+
+  Future<void> _clearLocalCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+    } catch (e) {
+      print('UserProvider: Error clearing cache: $e');
+    }
   }
 
   // Setters
@@ -123,6 +161,7 @@ class UserProvider extends ChangeNotifier {
         .collection('users')
         .doc(user.uid)
         .set(updates, SetOptions(merge: true));
+    _saveToLocalCache(); // Update cache with fresh updates
     notifyListeners();
   }
 }

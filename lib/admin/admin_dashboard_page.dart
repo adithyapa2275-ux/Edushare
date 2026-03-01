@@ -35,13 +35,13 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final isDesktop = size.width > 900;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Row(
         children: [
           // Sidebar / Navigation Rail
           NavigationRail(
             extended: isDesktop,
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).cardColor,
             elevation: 5,
             selectedIndex: _selectedIndex,
             onDestinationSelected: (index) {
@@ -115,7 +115,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 // Header
                 Container(
                   height: 70,
-                  color: Colors.white,
+                  color: Theme.of(context).cardColor,
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Row(
                     children: [

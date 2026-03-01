@@ -12,7 +12,7 @@ class FavoritesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: const CustomAppBar(),
       body: Consumer<FavoritesProvider>(
         builder: (context, favoritesProvider, child) {
@@ -53,7 +53,7 @@ class FavoritesPage extends StatelessWidget {
                 onTap: () => context.push('/book', extra: book),
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(

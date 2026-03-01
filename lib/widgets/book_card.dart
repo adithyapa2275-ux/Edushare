@@ -37,7 +37,7 @@ class _BookCardState extends State<BookCard> {
             bottom: 16,
           ), // Spacing between cards
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
@@ -60,17 +60,45 @@ class _BookCardState extends State<BookCard> {
                   child: Stack(
                     children: [
                       _buildBookImage(widget.book.imageUrl, widget.book.title),
-                      if (widget.book.discountPercentage > 0)
+                      Positioned(
+                        top: 8,
+                        left: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            borderRadius: BorderRadius.circular(4),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.2),
+                                blurRadius: 4,
+                              ),
+                            ],
+                          ),
+                          child: Text(
+                            '${widget.book.discountPercentage.toInt()}% OFF',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (widget.book.isDonation || widget.book.price == 0)
                         Positioned(
                           top: 8,
-                          left: 8,
+                          right: 8,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 8,
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.green,
+                              color: AppColors.secondary,
                               borderRadius: BorderRadius.circular(4),
                               boxShadow: [
                                 BoxShadow(
@@ -79,9 +107,9 @@ class _BookCardState extends State<BookCard> {
                                 ),
                               ],
                             ),
-                            child: Text(
-                              '${widget.book.discountPercentage.toInt()}% OFF',
-                              style: const TextStyle(
+                            child: const Text(
+                              'FREE',
+                              style: TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 10,
@@ -101,14 +129,16 @@ class _BookCardState extends State<BookCard> {
                   children: [
                     Text(
                       widget.book.title,
-                      style: AppTextStyles.h3.copyWith(fontSize: 16),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleLarge?.copyWith(fontSize: 16),
                       maxLines: 2, // Allow 2 lines for title
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
                     Text(
                       widget.book.author,
-                      style: AppTextStyles.bodyMedium,
+                      style: Theme.of(context).textTheme.bodyMedium,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -123,15 +153,14 @@ class _BookCardState extends State<BookCard> {
                         const SizedBox(width: 4),
                         Text(
                           widget.book.rating.toString(),
-                          style: AppTextStyles.bodySmall.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
                             '(${widget.book.reviewCount})',
-                            style: AppTextStyles.bodySmall,
+                            style: Theme.of(context).textTheme.bodySmall,
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -143,11 +172,14 @@ class _BookCardState extends State<BookCard> {
                       children: [
                         Expanded(
                           child: Text(
-                            '₹${widget.book.price}',
-                            style: AppTextStyles.h3.copyWith(
-                              color: AppColors.secondary,
-                              fontSize: 18,
-                            ),
+                            widget.book.isDonation || widget.book.price == 0
+                                ? 'FREE'
+                                : '₹${widget.book.price}',
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(
+                                  color: AppColors.secondary,
+                                  fontSize: 18,
+                                ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),

@@ -286,4 +286,23 @@ class ApiService {
   Future<List<Book>> fetchTrendingBooks() async {
     return searchBooks('trending books India');
   }
+
+  /// Fetches a single book by ISBN
+  Future<Book?> fetchBookByISBN(String isbn) async {
+    if (isbn.isEmpty) return null;
+    final url = Uri.parse('$_baseUrl?q=isbn:$isbn');
+    try {
+      final response = await http.get(url).timeout(const Duration(seconds: 5));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final items = data['items'] as List<dynamic>? ?? [];
+        if (items.isNotEmpty) {
+          return _mapGoogleBookToBook(items.first);
+        }
+      }
+    } catch (e) {
+      print('ApiService: Error fetching book by ISBN: $e');
+    }
+    return null;
+  }
 }
