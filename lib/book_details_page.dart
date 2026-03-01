@@ -217,16 +217,16 @@ class _DesktopLayout extends StatelessWidget {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    '₹${(book.price * 1.2).toStringAsFixed(2)}', // Mock original price
+                    '₹${(book.price * (1 + book.discountPercentage / 100)).toStringAsFixed(2)}',
                     style: AppTextStyles.bodyMedium.copyWith(
                       decoration: TextDecoration.lineThrough,
                       color: Colors.grey,
                     ),
                   ),
                   const SizedBox(width: 12),
-                  const Text(
-                    '20% off',
-                    style: TextStyle(
+                  Text(
+                    '${book.discountPercentage.toInt()}% off',
+                    style: const TextStyle(
                       color: AppColors.success,
                       fontWeight: FontWeight.bold,
                     ),

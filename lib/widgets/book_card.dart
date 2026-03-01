@@ -31,7 +31,6 @@ class _BookCardState extends State<BookCard> {
         onExit: (_) => setState(() => _isHovered = false),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          width: 200,
           transform: Matrix4.identity()..translate(0, _isHovered ? -8.0 : 0.0),
           margin: const EdgeInsets.only(
             right: 24,
@@ -58,9 +57,39 @@ class _BookCardState extends State<BookCard> {
                 ),
                 child: AspectRatio(
                   aspectRatio: 2 / 3,
-                  child: _buildBookImage(
-                    widget.book.imageUrl,
-                    widget.book.title,
+                  child: Stack(
+                    children: [
+                      _buildBookImage(widget.book.imageUrl, widget.book.title),
+                      if (widget.book.discountPercentage > 0)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              borderRadius: BorderRadius.circular(4),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              '${widget.book.discountPercentage.toInt()}% OFF',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
@@ -73,7 +102,7 @@ class _BookCardState extends State<BookCard> {
                     Text(
                       widget.book.title,
                       style: AppTextStyles.h3.copyWith(fontSize: 16),
-                      maxLines: 1,
+                      maxLines: 2, // Allow 2 lines for title
                       overflow: TextOverflow.ellipsis,
                     ),
                     const SizedBox(height: 4),
@@ -99,9 +128,12 @@ class _BookCardState extends State<BookCard> {
                           ),
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          '(${widget.book.reviewCount})',
-                          style: AppTextStyles.bodySmall,
+                        Flexible(
+                          child: Text(
+                            '(${widget.book.reviewCount})',
+                            style: AppTextStyles.bodySmall,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
                       ],
                     ),
@@ -109,12 +141,17 @@ class _BookCardState extends State<BookCard> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          '₹${widget.book.price}',
-                          style: AppTextStyles.h3.copyWith(
-                            color: AppColors.secondary,
+                        Expanded(
+                          child: Text(
+                            '₹${widget.book.price}',
+                            style: AppTextStyles.h3.copyWith(
+                              color: AppColors.secondary,
+                              fontSize: 18,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
+                        const SizedBox(width: 4),
                         GestureDetector(
                           onTap: () {
                             Provider.of<CartProvider>(

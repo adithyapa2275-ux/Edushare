@@ -66,6 +66,8 @@ class SellProvider extends ChangeNotifier {
       'rating': book.rating,
       'reviewCount': book.reviewCount,
       'sellerId': user.uid,
+      'uploaderId': user.uid,
+      'sellerName': user.displayName ?? 'Anonymous User',
       'timestamp': FieldValue.serverTimestamp(),
       'categories': book.categories,
       'isBestSeller': book.isBestSeller,

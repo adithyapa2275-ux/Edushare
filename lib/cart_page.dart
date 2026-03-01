@@ -109,9 +109,17 @@ class CartPage extends StatelessWidget {
 
   Widget _buildPriceDetails(BuildContext context, CartProvider cart) {
     double total = cart.totalPrice;
-    double discount = total * 0.1; // 10% discount
+    // Calculate total discount from individual items
+    double discount = cart.items.entries.fold(0.0, (sum, entry) {
+      if (entry.key.discountPercentage <= 0) return sum;
+      double originalPrice =
+          entry.key.price / (1 - entry.key.discountPercentage / 100);
+      return sum + (originalPrice - entry.key.price) * entry.value;
+    });
     double deliveryCharges = total >= 700 ? 0 : 50;
-    double finalAmount = total - discount + deliveryCharges;
+    double finalAmount =
+        total +
+        deliveryCharges; // total is already the sum of discounted prices
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -224,9 +232,14 @@ class CartPage extends StatelessWidget {
 
   Widget _buildBottomBar(BuildContext context, CartProvider cart) {
     double total = cart.totalPrice;
-    double discount = total * 0.1;
+    double discount = cart.items.entries.fold(0.0, (sum, entry) {
+      if (entry.key.discountPercentage <= 0) return sum;
+      double originalPrice =
+          entry.key.price / (1 - entry.key.discountPercentage / 100);
+      return sum + (originalPrice - entry.key.price) * entry.value;
+    });
     double deliveryCharges = total >= 700 ? 0 : 50;
-    double finalAmount = total - discount + deliveryCharges;
+    double finalAmount = total + deliveryCharges;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -347,22 +360,24 @@ class _CartItemTile extends StatelessWidget {
                           "₹${book.price}",
                           style: AppTextStyles.h3.copyWith(fontSize: 18),
                         ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "₹${(book.price * 1.1).toStringAsFixed(2)}",
-                          style: AppTextStyles.bodySmall.copyWith(
-                            decoration: TextDecoration.lineThrough,
+                        if (book.discountPercentage > 0) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            "₹${(book.price / (1 - book.discountPercentage / 100)).toStringAsFixed(2)}",
+                            style: AppTextStyles.bodySmall.copyWith(
+                              decoration: TextDecoration.lineThrough,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          "10% Off",
-                          style: TextStyle(
-                            color: AppColors.success,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                          const SizedBox(width: 8),
+                          Text(
+                            "${book.discountPercentage.toInt()}% Off",
+                            style: const TextStyle(
+                              color: AppColors.success,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ],

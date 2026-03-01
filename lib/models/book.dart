@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class Book {
   final String id;
@@ -6,6 +7,7 @@ class Book {
   final String author;
   final String description;
   final double price;
+  final double discountPercentage;
   final double rating;
   final int reviewCount;
   final String imageUrl;
@@ -13,6 +15,10 @@ class Book {
   final bool isNewArrival;
   final bool isBestSeller;
   final String? key; // Open Library Work Key (e.g. /works/OL123W)
+  final String sellerName;
+  final String? uploaderId;
+  final DateTime? uploadedAt;
+  final String thumbnail;
 
   const Book({
     required this.id,
@@ -21,40 +27,45 @@ class Book {
     required this.author,
     required this.description,
     required this.price,
+    this.discountPercentage = 0.0,
     required this.rating,
     required this.reviewCount,
     required this.imageUrl,
     this.categories = const [],
     this.isBestSeller = false,
     this.isNewArrival = false,
+    this.sellerName = 'EduShare',
+    this.uploaderId,
+    this.uploadedAt,
+    this.thumbnail = '',
   });
 
   factory Book.fromOpenLibrary(Map<String, dynamic> json) {
-    // Helper to safely get the first author
+    // ... existing logic ...
     String authorName = 'Unknown Author';
     if (json['authors'] != null && (json['authors'] as List).isNotEmpty) {
       authorName = json['authors'][0]['name'] ?? 'Unknown Author';
     }
 
-    // Helper to build cover URL
     String coverUrl = 'https://via.placeholder.com/150';
     if (json['cover_id'] != null) {
       coverUrl =
           'https://covers.openlibrary.org/b/id/${json['cover_id']}-L.jpg';
     }
 
-    // Extract subjects/categories
     List<String> categories = [];
     if (json['subject'] != null) {
       categories = (json['subject'] as List)
           .map((e) => e.toString())
-          .take(3) // Limit to 3 categories
+          .take(3)
           .toList();
     }
 
-    // Randomize Price and Rating since API doesn't provide them
+    // Randomize Price, Discount and Rating
     final random = Random();
     double price = 50.0 + random.nextDouble() * 650.0; // 50 - 700
+    double discountPercentage =
+        (random.nextInt(4) + 1) * 10.0; // 10%, 20%, 30%, 40%
     double rating = 3.0 + random.nextDouble() * 2.0; // 3.0 - 5.0
     int reviewCount = random.nextInt(5000) + 50;
 
@@ -63,9 +74,9 @@ class Book {
       key: json['key'],
       title: json['title'] ?? 'No Title',
       author: authorName,
-      description:
-          'No description available for this book.', // Subject API often omits text description
+      description: 'No description available for this book.',
       price: price,
+      discountPercentage: discountPercentage,
       rating: double.parse(rating.toStringAsFixed(1)),
       reviewCount: reviewCount,
       imageUrl: coverUrl,
@@ -81,16 +92,32 @@ class Book {
       'author': author,
       'description': description,
       'price': price,
+      'discountPercentage': discountPercentage,
       'rating': rating,
       'reviewCount': reviewCount,
       'imageUrl': imageUrl,
       'categories': categories,
       'isBestSeller': isBestSeller,
       'isNewArrival': isNewArrival,
+      'sellerName': sellerName,
+      'uploaderId': uploaderId,
+      'timestamp': uploadedAt != null
+          ? Timestamp.fromDate(uploadedAt!)
+          : FieldValue.serverTimestamp(),
+      'thumbnail': thumbnail,
     };
   }
 
   factory Book.fromMap(Map<String, dynamic> map, String id) {
+    DateTime? uploadedAt;
+    if (map['timestamp'] != null) {
+      if (map['timestamp'] is Timestamp) {
+        uploadedAt = (map['timestamp'] as Timestamp).toDate();
+      } else if (map['timestamp'] is int) {
+        uploadedAt = DateTime.fromMillisecondsSinceEpoch(map['timestamp']);
+      }
+    }
+
     return Book(
       id: id,
       key: map['key'],
@@ -98,12 +125,17 @@ class Book {
       author: map['author'] ?? '',
       description: map['description'] ?? '',
       price: (map['price'] ?? 0.0).toDouble(),
+      discountPercentage: (map['discountPercentage'] ?? 0.0).toDouble(),
       rating: (map['rating'] ?? 0.0).toDouble(),
       reviewCount: map['reviewCount'] ?? 0,
       imageUrl: map['imageUrl'] ?? '',
       categories: List<String>.from(map['categories'] ?? []),
       isBestSeller: map['isBestSeller'] ?? false,
       isNewArrival: map['isNewArrival'] ?? false,
+      sellerName: map['sellerName'] ?? 'EduShare',
+      uploaderId: map['uploaderId'],
+      uploadedAt: uploadedAt,
+      thumbnail: map['thumbnail'] ?? map['imageUrl'] ?? '',
     );
   }
 
@@ -118,6 +150,7 @@ class Book {
         description:
             'Between life and death there is a library, and within that library, the shelves go on forever.',
         price: 499.00,
+        discountPercentage: 20.0,
         rating: 4.5,
         reviewCount: 1250,
         imageUrl:
@@ -132,6 +165,7 @@ class Book {
         description:
             'No matter your goals, Atomic Habits offers a proven framework for improving--every day.',
         price: 650.00,
+        discountPercentage: 15.0,
         rating: 4.8,
         reviewCount: 5000,
         imageUrl:
@@ -148,6 +182,7 @@ class Book {
         description:
             'A comprehensive update of the leading algorithms text, with new material on matchings in bipartite graphs, online algorithms, machine learning, and other topics.',
         price: 125.00,
+        discountPercentage: 10.0,
         rating: 4.7,
         reviewCount: 800,
         imageUrl:
@@ -160,6 +195,7 @@ class Book {
         author: 'H.C. Verma',
         description: 'A classic textbook for physics students.',
         price: 430.00,
+        discountPercentage: 10.0,
         rating: 4.9,
         reviewCount: 12000,
         imageUrl:
@@ -175,6 +211,7 @@ class Book {
         description:
             'Harry Potter has no idea how famous he is. That\'s because he\'s being raised by his miserable aunt and uncle who are terrified Harry will learn that he\'s really a wizard.',
         price: 399.00,
+        discountPercentage: 25.0,
         rating: 4.9,
         reviewCount: 50000,
         imageUrl:
@@ -189,6 +226,7 @@ class Book {
         description:
             'Percy Jackson is a good kid, but he can\'t seem to focus on his schoolwork or control his temper.',
         price: 399.00,
+        discountPercentage: 10.0,
         rating: 4.8,
         reviewCount: 8000,
         imageUrl:
@@ -204,6 +242,7 @@ class Book {
         description:
             'Chapterwise Topicwise Solved Papers Physics, Chemistry & Mathematics.',
         price: 299.00,
+        discountPercentage: 15.0,
         rating: 4.4,
         reviewCount: 300,
         imageUrl:
@@ -217,6 +256,7 @@ class Book {
         description:
             'Objective Biology for NEET and other medical entrance examinations.',
         price: 299.00,
+        discountPercentage: 20.0,
         rating: 4.6,
         reviewCount: 500,
         imageUrl:
@@ -230,6 +270,7 @@ class Book {
         description:
             'General Studies for Civil Services Preliminary Examination.',
         price: 299.00,
+        discountPercentage: 12.0,
         rating: 4.5,
         reviewCount: 400,
         imageUrl:
@@ -245,6 +286,7 @@ class Book {
         description:
             'Ryland Grace is the sole survivor on a desperate, last-chance mission.',
         price: 599.00,
+        discountPercentage: 30.0,
         rating: 4.9,
         reviewCount: 3000,
         imageUrl:
@@ -274,6 +316,7 @@ class Book {
         author: 'Ray Wenderlich',
         description: 'Learn to build cross-platform apps with Flutter.',
         price: 650.00,
+        discountPercentage: 10.0,
         rating: 4.9,
         reviewCount: 1200,
         imageUrl:
@@ -288,6 +331,7 @@ class Book {
         author: 'Brunner & Suddarth',
         description: 'The best-selling textbook for medical-surgical nursing.',
         price: 699.00,
+        discountPercentage: 40.0,
         rating: 4.7,
         reviewCount: 800,
         imageUrl:
@@ -300,6 +344,7 @@ class Book {
         author: 'Ross & Wilson',
         description: 'Foundations of anatomy and physiology for nurses.',
         price: 599.00,
+        discountPercentage: 20.0,
         rating: 4.6,
         reviewCount: 1500,
         imageUrl:
@@ -314,6 +359,7 @@ class Book {
         author: 'R.C. Hibbeler',
         description: 'Comprehensive guide to structural analysis.',
         price: 550.00,
+        discountPercentage: 15.0,
         rating: 4.5,
         reviewCount: 600,
         imageUrl:
@@ -326,6 +372,7 @@ class Book {
         author: 'B.C. Punmia',
         description: 'Standard text for civil engineering students.',
         price: 600.00,
+        discountPercentage: 10.0,
         rating: 4.4,
         reviewCount: 900,
         imageUrl:
@@ -368,6 +415,7 @@ class Book {
         author: 'NCERT',
         description: 'Official NCERT textbook for Class 12 Chemistry.',
         price: 150.00,
+        discountPercentage: 50.0,
         rating: 4.8,
         reviewCount: 4500,
         imageUrl:

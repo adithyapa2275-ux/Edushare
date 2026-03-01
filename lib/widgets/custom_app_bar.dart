@@ -86,21 +86,15 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       actions: isMobile
           ? [
               IconButton(
-                // Mobile Search Icon
                 icon: const Icon(Icons.search, color: AppColors.textPrimary),
-                onPressed: () {
-                  // Ideally show search bar, but for now just focus or navigate?
-                  // Since we can't easily toggle state in this Stateless widget without refactor,
-                  // let's just leave it as a placeholder or maybe show a dialog.
-                  // For this bug fix, avoiding overflow is priority.
-                },
+                onPressed: () {},
               ),
               IconButton(
                 icon: const Icon(
                   Icons.shopping_cart_outlined,
                   color: AppColors.textPrimary,
                 ),
-                onPressed: () => context.push('/cart'),
+                onPressed: () => context.go('/cart'),
               ),
               PopupMenuButton<String>(
                 icon: const Icon(Icons.menu, color: AppColors.textPrimary),
@@ -109,8 +103,8 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   if (value == 'orders') context.go('/orders');
                   if (value == 'favorites') context.go('/favorites');
                   if (value == 'listings') context.go('/my_listings');
-                  if (value == 'sell') context.push('/sell');
-                  if (value == 'profile') context.push('/profile');
+                  if (value == 'sell') context.go('/sell');
+                  if (value == 'profile') context.go('/profile');
                 },
                 itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
                   const PopupMenuItem<String>(
@@ -187,11 +181,11 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                   Icons.shopping_cart_outlined,
                   color: AppColors.textPrimary,
                 ),
-                onPressed: () => context.push('/cart'),
+                onPressed: () => context.go('/cart'),
               ),
               const SizedBox(width: 8),
               TextButton.icon(
-                onPressed: () => context.push('/sell'),
+                onPressed: () => context.go('/sell'),
                 icon: const Icon(Icons.storefront, color: AppColors.primary),
                 label: const Text(
                   'SELL',
@@ -209,7 +203,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               Padding(
                 padding: const EdgeInsets.only(right: 16.0),
                 child: GestureDetector(
-                  onTap: () => context.push('/profile'),
+                  onTap: () => context.go('/profile'),
                   child: Consumer<UserProvider>(
                     builder: (context, user, _) {
                       return CircleAvatar(

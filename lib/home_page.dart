@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'core/colors.dart';
 import 'core/api_service.dart';
 import 'models/book.dart';
@@ -98,7 +99,8 @@ class _HomePageState extends State<HomePage> {
                     gridDelegate:
                         const SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 200,
-                          childAspectRatio: 0.4,
+                          childAspectRatio:
+                              0.35, // Taller cards to prevent overflow
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
                         ),
@@ -114,54 +116,114 @@ class _HomePageState extends State<HomePage> {
           }
 
           // Default Home View
-          return SingleChildScrollView(
-            child: Column(
-              children: [
-                const HeroBanner(),
-
-                // User Listings Section
-                Consumer<MarketplaceProvider>(
-                  builder: (context, marketplace, child) {
-                    if (marketplace.recentListings.isNotEmpty) {
-                      return Column(
-                        children: [
-                          SectionHeader(
-                            title: 'Recently Listed by Students',
-                            onMoreTap: () {},
-                          ),
-                          _BookList(books: marketplace.recentListings),
-                        ],
-                      );
-                    }
-                    return const SizedBox.shrink();
-                  },
-                ),
-
-                _buildSection(
-                  'NCERT & Indian Study Materials',
-                  _indianStudyMaterialsFuture,
-                ),
-                _buildSection('IT & Computer Science', _itBooksFuture),
-                _buildSection('Medical & Nursing (MBBS)', _nursingBooksFuture),
-                _buildSection('Engineering (B.Tech)', _engineeringBooksFuture),
-                _buildSection(
-                  'Class 12 / Plus Two (CBSE)',
-                  _class12BooksFuture,
-                ),
-                const SizedBox(height: 48),
-                const Footer(),
-              ],
-            ),
+          return _HomePageContent(
+            indianStudyMaterialsFuture: _indianStudyMaterialsFuture,
+            itBooksFuture: _itBooksFuture,
+            nursingBooksFuture: _nursingBooksFuture,
+            engineeringBooksFuture: _engineeringBooksFuture,
+            class12BooksFuture: _class12BooksFuture,
+            onRetry: _fetchAllBooks,
           );
         },
       ),
     );
   }
+}
 
-  Widget _buildSection(String title, Future<List<Book>> future) {
+class _HomePageContent extends StatelessWidget {
+  final Future<List<Book>> indianStudyMaterialsFuture;
+  final Future<List<Book>> itBooksFuture;
+  final Future<List<Book>> nursingBooksFuture;
+  final Future<List<Book>> engineeringBooksFuture;
+  final Future<List<Book>> class12BooksFuture;
+  final VoidCallback onRetry;
+
+  const _HomePageContent({
+    required this.indianStudyMaterialsFuture,
+    required this.itBooksFuture,
+    required this.nursingBooksFuture,
+    required this.engineeringBooksFuture,
+    required this.class12BooksFuture,
+    required this.onRetry,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      child: Column(
+        children: [
+          const HeroBanner(),
+          Consumer<MarketplaceProvider>(
+            builder: (context, marketplace, child) {
+              if (marketplace.recentListings.isNotEmpty) {
+                return Column(
+                  children: [
+                    SectionHeader(
+                      title: 'Recently Listed by Students',
+                      onMoreTap: () {},
+                    ),
+                    _BookList(books: marketplace.recentListings),
+                  ],
+                );
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          _buildSection(
+            context,
+            'NCERT & Indian Study Materials',
+            indianStudyMaterialsFuture,
+            'NCERT CBSE Indian Textbooks',
+          ),
+          _buildSection(
+            context,
+            'IT & Computer Science',
+            itBooksFuture,
+            'Computer Science India',
+          ),
+          _buildSection(
+            context,
+            'Medical & Nursing (MBBS)',
+            nursingBooksFuture,
+            'Nursing Medical India',
+          ),
+          _buildSection(
+            context,
+            'Engineering (B.Tech)',
+            engineeringBooksFuture,
+            'Engineering India S.Chand',
+          ),
+          _buildSection(
+            context,
+            'Class 12 / Plus Two (CBSE)',
+            class12BooksFuture,
+            'NCERT CBSE Class 12',
+          ),
+          const SizedBox(height: 48),
+          const Footer(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSection(
+    BuildContext context,
+    String title,
+    Future<List<Book>> future,
+    String? query,
+  ) {
     return Column(
       children: [
-        SectionHeader(title: title, onMoreTap: () {}),
+        SectionHeader(
+          title: title,
+          onMoreTap: query != null
+              ? () => context.push(
+                  '/category',
+                  extra: {'title': title, 'query': query},
+                )
+              : null,
+        ),
         FutureBuilder<List<Book>>(
           future: future,
           builder: (context, snapshot) {
@@ -185,7 +247,7 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 8),
                       Text('Failed to load $title'),
                       TextButton(
-                        onPressed: () => _fetchAllBooks(),
+                        onPressed: onRetry,
                         child: const Text('Retry'),
                       ),
                     ],
@@ -198,7 +260,6 @@ class _HomePageState extends State<HomePage> {
                 child: Center(child: Text('No books found in this section')),
               );
             }
-
             return _BookList(books: snapshot.data!);
           },
         ),
@@ -207,22 +268,48 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-class _BookList extends StatelessWidget {
+class _BookList extends StatefulWidget {
   final List<Book> books;
-
   const _BookList({required this.books});
+
+  @override
+  State<_BookList> createState() => _BookListState();
+}
+
+class _BookListState extends State<_BookList> {
+  late ScrollController _scrollController;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 460, // Height for card + shadows + hover space
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        scrollDirection: Axis.horizontal,
-        itemCount: books.length,
-        itemBuilder: (context, index) {
-          return BookCard(book: books[index]);
-        },
+      height: 500,
+      child: Scrollbar(
+        controller: _scrollController,
+        child: ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          scrollDirection: Axis.horizontal,
+          physics: const BouncingScrollPhysics(),
+          controller: _scrollController,
+          itemCount: widget.books.length,
+          itemBuilder: (context, index) {
+            return SizedBox(
+              width: 200,
+              child: BookCard(book: widget.books[index]),
+            );
+          },
+        ),
       ),
     );
   }

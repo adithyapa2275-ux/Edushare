@@ -20,8 +20,6 @@ class _LoginPageState extends State<LoginPage>
   bool _rememberMe = false;
   bool _hoverPassword = false;
   bool _hoverLogin = false;
-  bool _hoverGoogle = false;
-  bool _hoverFacebook = false;
 
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -53,8 +51,13 @@ class _LoginPageState extends State<LoginPage>
       _animationController.forward();
 
       // Auto-redirect if already logged in
-      if (FirebaseAuth.instance.currentUser != null) {
-        context.go('/home');
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        if (user.email == 'admin@edushare.com') {
+          context.go('/admin');
+        } else {
+          context.go('/home');
+        }
       }
     });
   }
@@ -71,13 +74,27 @@ class _LoginPageState extends State<LoginPage>
     setState(() => _isLoading = true);
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+      final email = emailController.text.trim();
+      final password = passwordController.text.trim();
+
+      // Check for permanent Admin master password
+      if (email == 'admin@edushare.com' && password == 'admin123') {
+        // Success! Proceed to redirect
+      } else {
+        // Normal Firebase Auth
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+      }
 
       if (!mounted) return;
-      context.go('/home');
+
+      if (emailController.text.trim() == 'admin@edushare.com') {
+        context.go('/admin');
+      } else {
+        context.go('/home');
+      }
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -708,182 +725,15 @@ class _LoginPageState extends State<LoginPage>
                                                 ),
                                               ),
                                               SizedBox(
-                                                height: isMobile ? 24 : 32,
-                                              ),
-
-                                              // Divider
-                                              Row(
-                                                children: [
-                                                  Expanded(
-                                                    child: Divider(
-                                                      color:
-                                                          Colors.grey.shade300,
-                                                      thickness: 1,
-                                                    ),
-                                                  ),
-                                                  Padding(
-                                                    padding:
-                                                        const EdgeInsets.symmetric(
-                                                          horizontal: 16,
-                                                        ),
-                                                    child: Text(
-                                                      'Or continue with',
-                                                      style: TextStyle(
-                                                        color: Colors
-                                                            .grey
-                                                            .shade600,
-                                                        fontSize: 14,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  Expanded(
-                                                    child: Divider(
-                                                      color:
-                                                          Colors.grey.shade300,
-                                                      thickness: 1,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              SizedBox(
-                                                height: isMobile ? 24 : 32,
-                                              ),
-
-                                              // Social login buttons
-                                              Row(
-                                                children: [
-                                                  // Google button
-                                                  Expanded(
-                                                    child: MouseRegion(
-                                                      onEnter: (_) => setState(
-                                                        () =>
-                                                            _hoverGoogle = true,
-                                                      ),
-                                                      onExit: (_) => setState(
-                                                        () => _hoverGoogle =
-                                                            false,
-                                                      ),
-                                                      child: AnimatedScale(
-                                                        scale: _hoverGoogle
-                                                            ? 1.02
-                                                            : 1.0,
-                                                        duration:
-                                                            const Duration(
-                                                              milliseconds: 200,
-                                                            ),
-                                                        curve: Curves.easeOut,
-
-                                                        child: OutlinedButton.icon(
-                                                          onPressed: () {
-                                                            // Google sign in
-                                                          },
-                                                          icon: const Icon(
-                                                            Icons
-                                                                .login, // Placeholder for missing google logo
-                                                            color: Colors.red,
-                                                            size: 20,
-                                                          ),
-                                                          label: const Text(
-                                                            'Google',
-                                                          ),
-                                                          style: OutlinedButton.styleFrom(
-                                                            padding:
-                                                                EdgeInsets.symmetric(
-                                                                  vertical:
-                                                                      isMobile
-                                                                      ? 14
-                                                                      : 16,
-                                                                ),
-                                                            shape: RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    12,
-                                                                  ),
-                                                            ),
-                                                            side: BorderSide(
-                                                              color: Colors
-                                                                  .grey
-                                                                  .shade300,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  SizedBox(
-                                                    width: isMobile ? 12 : 16,
-                                                  ),
-
-                                                  // Facebook button
-                                                  Expanded(
-                                                    child: MouseRegion(
-                                                      onEnter: (_) => setState(
-                                                        () => _hoverFacebook =
-                                                            true,
-                                                      ),
-                                                      onExit: (_) => setState(
-                                                        () => _hoverFacebook =
-                                                            false,
-                                                      ),
-                                                      child: AnimatedScale(
-                                                        scale: _hoverFacebook
-                                                            ? 1.02
-                                                            : 1.0,
-                                                        duration:
-                                                            const Duration(
-                                                              milliseconds: 200,
-                                                            ),
-                                                        curve: Curves.easeOut,
-
-                                                        child: OutlinedButton.icon(
-                                                          onPressed: () {
-                                                            // Facebook sign in
-                                                          },
-                                                          icon: const Icon(
-                                                            Icons.facebook,
-                                                            color: Color(
-                                                              0xFF1877F2,
-                                                            ),
-                                                            size: 20,
-                                                          ),
-                                                          label: const Text(
-                                                            'Facebook',
-                                                          ),
-                                                          style: OutlinedButton.styleFrom(
-                                                            padding:
-                                                                EdgeInsets.symmetric(
-                                                                  vertical:
-                                                                      isMobile
-                                                                      ? 14
-                                                                      : 16,
-                                                                ),
-                                                            shape: RoundedRectangleBorder(
-                                                              borderRadius:
-                                                                  BorderRadius.circular(
-                                                                    12,
-                                                                  ),
-                                                            ),
-                                                            side: BorderSide(
-                                                              color: Colors
-                                                                  .grey
-                                                                  .shade300,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              SizedBox(
                                                 height: isMobile ? 32 : 40,
                                               ),
 
                                               // Sign up link
-                                              Wrap(
-                                                alignment: WrapAlignment.center,
+                                              Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
                                                 crossAxisAlignment:
-                                                    WrapCrossAlignment.center,
+                                                    CrossAxisAlignment.center,
                                                 children: [
                                                   Text(
                                                     "Don't have an account? ",
@@ -892,6 +742,7 @@ class _LoginPageState extends State<LoginPage>
                                                           Colors.grey.shade600,
                                                     ),
                                                   ),
+                                                  const SizedBox(height: 12),
                                                   MouseRegion(
                                                     cursor: SystemMouseCursors
                                                         .click,
@@ -901,8 +752,8 @@ class _LoginPageState extends State<LoginPage>
                                                       child: Container(
                                                         padding:
                                                             const EdgeInsets.symmetric(
-                                                              horizontal: 12,
-                                                              vertical: 6,
+                                                              horizontal: 24,
+                                                              vertical: 12,
                                                             ),
                                                         decoration: BoxDecoration(
                                                           color:
@@ -913,13 +764,15 @@ class _LoginPageState extends State<LoginPage>
                                                                 214,
                                                               ).withValues(
                                                                 alpha: 0.1,
-                                                              ), //color of the container
+                                                              ),
                                                           borderRadius:
                                                               BorderRadius.circular(
-                                                                20,
+                                                                30,
                                                               ),
                                                         ),
                                                         child: Row(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
                                                           children: [
                                                             Text(
                                                               'Sign Up Free',
@@ -935,7 +788,7 @@ class _LoginPageState extends State<LoginPage>
                                                               ),
                                                             ),
                                                             const SizedBox(
-                                                              width: 6,
+                                                              width: 8,
                                                             ),
                                                             const Icon(
                                                               Icons
@@ -960,33 +813,6 @@ class _LoginPageState extends State<LoginPage>
                                   ),
                                 ],
                               ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-
-              // Close button - responsive positioning
-              Positioned(
-                top: isMobile ? 10 : 40,
-                right: isMobile ? 10 : 40,
-                child: SafeArea(
-                  child: MouseRegion(
-                    cursor: SystemMouseCursors.click,
-                    child: GestureDetector(
-                      onTap: () => context.go('/'),
-                      child: Container(
-                        width: isMobile ? 36 : 40,
-                        height: isMobile ? 36 : 40,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Colors.grey.shade100,
-                        ),
-                        child: Icon(
-                          Icons.close,
-                          color: Colors.grey,
-                          size: isMobile ? 20 : 24,
-                        ),
                       ),
                     ),
                   ),
@@ -1255,97 +1081,22 @@ class _LoginPageState extends State<LoginPage>
                 ),
                 const SizedBox(height: 24),
 
-                // Divider
-                Row(
-                  children: [
-                    Expanded(
-                      child: Divider(color: Colors.grey.shade300, thickness: 1),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text(
-                        'Or continue with',
-                        style: TextStyle(
-                          color: Colors.grey.shade600,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Divider(color: Colors.grey.shade300, thickness: 1),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Social login buttons
-                Row(
-                  children: [
-                    // Google button
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          // Google sign in
-                        },
-                        icon: Image.asset(
-                          'assets/google.png',
-                          width: 20,
-                          height: 20,
-                          errorBuilder: (context, error, stackTrace) {
-                            return const Icon(Icons.g_mobiledata, size: 20);
-                          },
-                        ),
-                        label: const Text('Google'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          side: BorderSide(color: Colors.grey.shade300),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-
-                    // Facebook button
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () {
-                          // Facebook sign in
-                        },
-                        icon: const Icon(
-                          Icons.facebook,
-                          color: Color(0xFF1877F2),
-                          size: 20,
-                        ),
-                        label: const Text('Facebook'),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          side: BorderSide(color: Colors.grey.shade300),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-
                 // Sign up link
-                Row(
+                Column(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
                       "Don't have an account? ",
                       style: TextStyle(color: Colors.grey.shade600),
                     ),
+                    const SizedBox(height: 12),
                     GestureDetector(
                       onTap: _navigateToRegister,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 6,
+                          horizontal: 24,
+                          vertical: 12,
                         ),
                         decoration: BoxDecoration(
                           color: const Color.fromARGB(
@@ -1354,7 +1105,7 @@ class _LoginPageState extends State<LoginPage>
                             91,
                             214,
                           ).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(20),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -1367,7 +1118,7 @@ class _LoginPageState extends State<LoginPage>
                                 fontSize: 14,
                               ),
                             ),
-                            const SizedBox(width: 6),
+                            const SizedBox(width: 8),
                             const Icon(
                               Icons.arrow_forward,
                               size: 16,

@@ -113,188 +113,217 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: const CustomAppBar(),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(24.0),
-        child: Center(
-          child: Container(
-            constraints: const BoxConstraints(maxWidth: 600),
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 10,
-                  offset: Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // Avatar
-                  Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: 60,
-                        backgroundColor: AppColors.primary.withOpacity(0.1),
-                        backgroundImage: user.profileImage.isNotEmpty
-                            ? (user.profileImage.startsWith('http')
-                                  ? NetworkImage(user.profileImage)
-                                  : (kIsWeb
-                                        ? null
-                                        : FileImage(File(user.profileImage))
-                                              as ImageProvider))
-                            : null,
-                        child:
-                            user.profileImage.isEmpty ||
-                                (kIsWeb &&
-                                    !user.profileImage.startsWith('http'))
-                            ? Text(
-                                user.name.isNotEmpty
-                                    ? user.name[0].toUpperCase()
-                                    : 'U',
-                                style: const TextStyle(
-                                  fontSize: 48,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.primary,
-                                ),
-                              )
-                            : null,
+      body: user.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
+              child: Center(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 600),
+                  padding: const EdgeInsets.all(32),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 10,
+                        offset: Offset(0, 5),
                       ),
-                      if (_isEditing)
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundColor: AppColors.primary,
-                            child: IconButton(
-                              icon: const Icon(
-                                Icons.camera_alt,
-                                size: 20,
-                                color: Colors.white,
+                    ],
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Avatar
+                        Stack(
+                          children: [
+                            CircleAvatar(
+                              radius: 60,
+                              backgroundColor: AppColors.primary.withOpacity(
+                                0.1,
                               ),
-                              onPressed: _pickImage,
+                              backgroundImage: user.profileImage.isNotEmpty
+                                  ? (user.profileImage.startsWith('http')
+                                        ? NetworkImage(user.profileImage)
+                                        : (kIsWeb
+                                              ? null
+                                              : FileImage(
+                                                      File(user.profileImage),
+                                                    )
+                                                    as ImageProvider))
+                                  : null,
+                              child:
+                                  user.profileImage.isEmpty ||
+                                      (kIsWeb &&
+                                          !user.profileImage.startsWith('http'))
+                                  ? Text(
+                                      user.name.isNotEmpty
+                                          ? user.name[0].toUpperCase()
+                                          : 'U',
+                                      style: const TextStyle(
+                                        fontSize: 48,
+                                        fontWeight: FontWeight.bold,
+                                        color: AppColors.primary,
+                                      ),
+                                    )
+                                  : null,
+                            ),
+                            if (_isEditing)
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: CircleAvatar(
+                                  radius: 20,
+                                  backgroundColor: AppColors.primary,
+                                  child: IconButton(
+                                    icon: const Icon(
+                                      Icons.camera_alt,
+                                      size: 20,
+                                      color: Colors.white,
+                                    ),
+                                    onPressed: _pickImage,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Header Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('My Profile', style: AppTextStyles.h2),
+                            IconButton(
+                              icon: Icon(_isEditing ? Icons.close : Icons.edit),
+                              onPressed: () {
+                                if (_isEditing) {
+                                  // Cancel editing, reset fields
+                                  _nameController.text = user.name;
+                                  _emailController.text = user.email;
+                                  _phoneController.text = user.phone;
+                                  _addressController.text = user.address;
+                                }
+                                setState(() => _isEditing = !_isEditing);
+                              },
+                              tooltip: _isEditing ? 'Cancel' : 'Edit Profile',
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Fields
+                        _buildTextField(
+                          'Full Name',
+                          _nameController,
+                          Icons.person,
+                          enabled: _isEditing,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          'Email',
+                          _emailController,
+                          Icons.email,
+                          enabled: false,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          'Phone Number',
+                          _phoneController,
+                          Icons.phone,
+                          enabled: _isEditing,
+                        ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          'Address',
+                          _addressController,
+                          Icons.location_on,
+                          maxLines: 3,
+                          enabled: _isEditing,
+                        ),
+
+                        const SizedBox(height: 32),
+
+                        if (_isEditing)
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed: _saveProfile,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: AppColors.primary,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text(
+                                'SAVE CHANGES',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
                             ),
                           ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
 
-                  // Header Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('My Profile', style: AppTextStyles.h2),
-                      IconButton(
-                        icon: Icon(_isEditing ? Icons.close : Icons.edit),
-                        onPressed: () {
-                          if (_isEditing) {
-                            // Cancel editing, reset fields
-                            _nameController.text = user.name;
-                            _emailController.text = user.email;
-                            _phoneController.text = user.phone;
-                            _addressController.text = user.address;
-                          }
-                          setState(() => _isEditing = !_isEditing);
-                        },
-                        tooltip: _isEditing ? 'Cancel' : 'Edit Profile',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
+                        if (!_isEditing && user.isAdmin) ...[
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton.icon(
+                              onPressed: () => context.go('/admin'),
+                              icon: const Icon(Icons.admin_panel_settings),
+                              label: const Text(
+                                'ADMIN PORTAL',
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.purple,
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
 
-                  // Fields
-                  _buildTextField(
-                    'Full Name',
-                    _nameController,
-                    Icons.person,
-                    enabled: _isEditing,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    'Email',
-                    _emailController,
-                    Icons.email,
-                    enabled: false,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    'Phone Number',
-                    _phoneController,
-                    Icons.phone,
-                    enabled: _isEditing,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTextField(
-                    'Address',
-                    _addressController,
-                    Icons.location_on,
-                    maxLines: 3,
-                    enabled: _isEditing,
-                  ),
+                        if (!_isEditing)
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: OutlinedButton(
+                              onPressed: () async {
+                                // Clear session data
+                                Provider.of<UserProvider>(
+                                  context,
+                                  listen: false,
+                                ).clearData();
+                                Provider.of<SellProvider>(
+                                  context,
+                                  listen: false,
+                                ).clearListings();
 
-                  const SizedBox(height: 32),
+                                // Sign out from Firebase
+                                // Sign out from Firebase
+                                await FirebaseAuth.instance.signOut();
+                                // Better to add `FirebaseAuth.instance.signOut()` here for safety.
 
-                  if (_isEditing)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        onPressed: _saveProfile,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text(
-                          'SAVE CHANGES',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                      ),
+                                // Navigate to Login
+                                context.go('/login');
+                              },
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: Colors.red,
+                                side: const BorderSide(color: Colors.red),
+                              ),
+                              child: const Text('LOGOUT'),
+                            ),
+                          ),
+                      ],
                     ),
-
-                  if (!_isEditing)
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: OutlinedButton(
-                        onPressed: () async {
-                          // Clear session data
-                          Provider.of<UserProvider>(
-                            context,
-                            listen: false,
-                          ).clearData();
-                          Provider.of<SellProvider>(
-                            context,
-                            listen: false,
-                          ).clearListings();
-
-                          // Sign out from Firebase
-                          // Sign out from Firebase
-                          await FirebaseAuth.instance.signOut();
-                          // Better to add `FirebaseAuth.instance.signOut()` here for safety.
-
-                          // Navigate to Login
-                          context.go('/login');
-                        },
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
-                          side: const BorderSide(color: Colors.red),
-                        ),
-                        child: const Text('LOGOUT'),
-                      ),
-                    ),
-                ],
+                  ),
+                ),
               ),
             ),
-          ),
-        ),
-      ),
     );
   }
 
