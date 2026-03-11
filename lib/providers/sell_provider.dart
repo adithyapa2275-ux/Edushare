@@ -41,7 +41,7 @@ class SellProvider extends ChangeNotifier {
       }
     } catch (e) {
       // Handle error, e.g., print to console or show a snackbar
-      print("Error loading listings: $e");
+      debugPrint("Error loading listings: $e");
     } finally {
       _isLoading = false; // Set loading to false
       notifyListeners(); // Notify listeners about loading state change and data update
@@ -74,14 +74,24 @@ class SellProvider extends ChangeNotifier {
       'isNewArrival': book.isNewArrival,
     };
 
-    await _db.collection('listings').add(bookData);
-    _userListings.add(book); // Local update for speed
-    notifyListeners();
+    try {
+      await _db.collection('listings').add(bookData);
+      _userListings.add(book); // Local update for speed
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error adding book: $e");
+      rethrow;
+    }
   }
 
   Future<void> removeBook(String id) async {
-    await _db.collection('listings').doc(id).delete();
-    _userListings.removeWhere((book) => book.id == id);
-    notifyListeners();
+    try {
+      await _db.collection('listings').doc(id).delete();
+      _userListings.removeWhere((book) => book.id == id);
+      notifyListeners();
+    } catch (e) {
+      debugPrint("Error removing book: $e");
+      rethrow;
+    }
   }
 }

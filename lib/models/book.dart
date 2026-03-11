@@ -44,6 +44,64 @@ class Book {
     this.isbn = '',
   });
 
+  Book copyWith({
+    String? id,
+    String? key,
+    String? title,
+    String? author,
+    String? description,
+    double? price,
+    double? discountPercentage,
+    double? rating,
+    int? reviewCount,
+    String? imageUrl,
+    List<String>? categories,
+    bool? isNewArrival,
+    bool? isBestSeller,
+    String? sellerName,
+    String? uploaderId,
+    DateTime? uploadedAt,
+    String? thumbnail,
+    bool? isDonation,
+    String? isbn,
+  }) {
+    return Book(
+      id: id ?? this.id,
+      key: key ?? this.key,
+      title: title ?? this.title,
+      author: author ?? this.author,
+      description: description ?? this.description,
+      price: price ?? this.price,
+      discountPercentage: discountPercentage ?? this.discountPercentage,
+      rating: rating ?? this.rating,
+      reviewCount: reviewCount ?? this.reviewCount,
+      imageUrl: imageUrl ?? this.imageUrl,
+      categories: categories ?? this.categories,
+      isNewArrival: isNewArrival ?? this.isNewArrival,
+      isBestSeller: isBestSeller ?? this.isBestSeller,
+      sellerName: sellerName ?? this.sellerName,
+      uploaderId: uploaderId ?? this.uploaderId,
+      uploadedAt: uploadedAt ?? this.uploadedAt,
+      thumbnail: thumbnail ?? this.thumbnail,
+      isDonation: isDonation ?? this.isDonation,
+      isbn: isbn ?? this.isbn,
+    );
+  }
+
+  double get originalPrice {
+    if (price == 0 || isDonation) return price;
+    // Ensure there's always a visual "cut" price if discount is not set or too small
+    double effectiveDiscount = discountPercentage >= 5.0
+        ? discountPercentage
+        : 25.0;
+    return price / (1 - (effectiveDiscount / 100));
+  }
+
+  double get effectiveDiscountPercentage {
+    if (isDonation || price == 0) return 0.0;
+    return discountPercentage >= 5.0 ? discountPercentage : 25.0;
+  }
+
   factory Book.fromOpenLibrary(Map<String, dynamic> json) {
     // ... existing logic ...
     String authorName = 'Unknown Author';
@@ -67,11 +125,11 @@ class Book {
 
     // Randomize Price, Discount and Rating
     final random = Random();
-    double price = 50.0 + random.nextDouble() * 650.0; // 50 - 700
-    double discountPercentage =
-        (random.nextInt(4) + 1) * 10.0; // 10%, 20%, 30%, 40%
-    double rating = 3.0 + random.nextDouble() * 2.0; // 3.0 - 5.0
-    int reviewCount = random.nextInt(5000) + 50;
+    // Base price at least 150 to allow room for "striking" to 110-120
+    double price = 110.0 + random.nextDouble() * 500.0;
+    double discountPercentage = 20.0 + random.nextInt(15); // 20-35%
+    double rating = 3.5 + random.nextDouble() * 1.5;
+    int reviewCount = random.nextInt(3000) + 20;
 
     return Book(
       id: json['key'] ?? DateTime.now().millisecondsSinceEpoch.toString(),
@@ -79,7 +137,7 @@ class Book {
       title: json['title'] ?? 'No Title',
       author: authorName,
       description: 'No description available for this book.',
-      price: price,
+      price: price.clamp(110.0, 5000.0),
       discountPercentage: discountPercentage,
       rating: double.parse(rating.toStringAsFixed(1)),
       reviewCount: reviewCount,
@@ -131,11 +189,17 @@ class Book {
       author: map['author'] ?? '',
       description: map['description'] ?? '',
       price: (map['price'] ?? 0.0).toDouble(),
-      discountPercentage: (map['discountPercentage'] ?? 0.0).toDouble(),
+      discountPercentage: (map['isDonation'] == true)
+          ? 0.0
+          : (map['discountPercentage'] != null &&
+                (map['discountPercentage'] as num) > 0)
+          ? (map['discountPercentage'] as num).toDouble()
+          : 25.0, // Default 25% if missing or 0
       rating: (map['rating'] ?? 0.0).toDouble(),
       reviewCount: map['reviewCount'] ?? 0,
       imageUrl: map['imageUrl'] ?? '',
-      categories: List<String>.from(map['categories'] ?? []),
+      categories:
+          (map['categories'] as List?)?.map((e) => e.toString()).toList() ?? [],
       isBestSeller: map['isBestSeller'] ?? false,
       isNewArrival: map['isNewArrival'] ?? false,
       sellerName: map['sellerName'] ?? 'EduShare',
@@ -157,7 +221,7 @@ class Book {
         author: 'Matt Haig',
         description:
             'Between life and death there is a library, and within that library, the shelves go on forever.',
-        price: 499.00,
+        price: 399.00,
         discountPercentage: 20.0,
         rating: 4.5,
         reviewCount: 1250,
@@ -172,7 +236,7 @@ class Book {
         author: 'James Clear',
         description:
             'No matter your goals, Atomic Habits offers a proven framework for improving--every day.',
-        price: 650.00,
+        price: 550.00,
         discountPercentage: 15.0,
         rating: 4.8,
         reviewCount: 5000,
@@ -189,7 +253,7 @@ class Book {
         author: 'Thomas H. Cormen',
         description:
             'A comprehensive update of the leading algorithms text, with new material on matchings in bipartite graphs, online algorithms, machine learning, and other topics.',
-        price: 125.00,
+        price: 425.00,
         discountPercentage: 10.0,
         rating: 4.7,
         reviewCount: 800,
@@ -202,8 +266,8 @@ class Book {
         title: 'Concepts of Physics',
         author: 'H.C. Verma',
         description: 'A classic textbook for physics students.',
-        price: 430.00,
-        discountPercentage: 10.0,
+        price: 320.00,
+        discountPercentage: 20.0,
         rating: 4.9,
         reviewCount: 12000,
         imageUrl:
@@ -218,7 +282,7 @@ class Book {
         author: 'J.K. Rowling',
         description:
             'Harry Potter has no idea how famous he is. That\'s because he\'s being raised by his miserable aunt and uncle who are terrified Harry will learn that he\'s really a wizard.',
-        price: 399.00,
+        price: 299.00,
         discountPercentage: 25.0,
         rating: 4.9,
         reviewCount: 50000,
@@ -233,8 +297,8 @@ class Book {
         author: 'Rick Riordan',
         description:
             'Percy Jackson is a good kid, but he can\'t seem to focus on his schoolwork or control his temper.',
-        price: 399.00,
-        discountPercentage: 10.0,
+        price: 299.00,
+        discountPercentage: 25.0,
         rating: 4.8,
         reviewCount: 8000,
         imageUrl:
@@ -249,8 +313,8 @@ class Book {
         author: 'Arihant Experts',
         description:
             'Chapterwise Topicwise Solved Papers Physics, Chemistry & Mathematics.',
-        price: 299.00,
-        discountPercentage: 15.0,
+        price: 249.00,
+        discountPercentage: 25.0,
         rating: 4.4,
         reviewCount: 300,
         imageUrl:
@@ -263,7 +327,7 @@ class Book {
         author: 'Dr. Ali',
         description:
             'Objective Biology for NEET and other medical entrance examinations.',
-        price: 299.00,
+        price: 249.00,
         discountPercentage: 20.0,
         rating: 4.6,
         reviewCount: 500,
@@ -277,8 +341,8 @@ class Book {
         author: 'Disha Experts',
         description:
             'General Studies for Civil Services Preliminary Examination.',
-        price: 299.00,
-        discountPercentage: 12.0,
+        price: 249.00,
+        discountPercentage: 30.0,
         rating: 4.5,
         reviewCount: 400,
         imageUrl:
@@ -293,7 +357,7 @@ class Book {
         author: 'Andy Weir',
         description:
             'Ryland Grace is the sole survivor on a desperate, last-chance mission.',
-        price: 599.00,
+        price: 499.00,
         discountPercentage: 30.0,
         rating: 4.9,
         reviewCount: 3000,
@@ -310,7 +374,8 @@ class Book {
         author: 'Robert C. Martin',
         description:
             'A Handbook of Agile Software Craftsmanship. Essential for every developer.',
-        price: 600.00,
+        price: 450.00,
+        discountPercentage: 25.0,
         rating: 4.8,
         reviewCount: 4500,
         imageUrl:
@@ -323,8 +388,8 @@ class Book {
         title: 'Flutter Apprentice',
         author: 'Ray Wenderlich',
         description: 'Learn to build cross-platform apps with Flutter.',
-        price: 650.00,
-        discountPercentage: 10.0,
+        price: 450.00,
+        discountPercentage: 30.0,
         rating: 4.9,
         reviewCount: 1200,
         imageUrl:
@@ -338,7 +403,7 @@ class Book {
         title: 'Medical-Surgical Nursing',
         author: 'Brunner & Suddarth',
         description: 'The best-selling textbook for medical-surgical nursing.',
-        price: 699.00,
+        price: 499.00,
         discountPercentage: 40.0,
         rating: 4.7,
         reviewCount: 800,
@@ -351,8 +416,8 @@ class Book {
         title: 'Anatomy and Physiology',
         author: 'Ross & Wilson',
         description: 'Foundations of anatomy and physiology for nurses.',
-        price: 599.00,
-        discountPercentage: 20.0,
+        price: 419.00,
+        discountPercentage: 30.0,
         rating: 4.6,
         reviewCount: 1500,
         imageUrl:
@@ -366,8 +431,8 @@ class Book {
         title: 'Structural Analysis',
         author: 'R.C. Hibbeler',
         description: 'Comprehensive guide to structural analysis.',
-        price: 550.00,
-        discountPercentage: 15.0,
+        price: 450.00,
+        discountPercentage: 25.0,
         rating: 4.5,
         reviewCount: 600,
         imageUrl:
@@ -379,8 +444,8 @@ class Book {
         title: 'Surveying Vol. 1',
         author: 'B.C. Punmia',
         description: 'Standard text for civil engineering students.',
-        price: 600.00,
-        discountPercentage: 10.0,
+        price: 450.00,
+        discountPercentage: 25.0,
         rating: 4.4,
         reviewCount: 900,
         imageUrl:
@@ -394,7 +459,8 @@ class Book {
         title: 'Physics Part 1 - Class 12',
         author: 'NCERT',
         description: 'Official NCERT textbook for Class 12 Physics.',
-        price: 150.00,
+        price: 120.00,
+        discountPercentage: 20.0,
         rating: 4.9,
         reviewCount: 5000,
         imageUrl:
@@ -404,15 +470,16 @@ class Book {
       ),
       // nursing
       const Book(
-        id: 'p2_1',
+        id: 'p2_nurs',
         title: 'Phycology 2026 - Nursing',
         author: 'NCERT',
         description: 'Official Guide for Nursing Entrance Exam.',
-        price: 150.00,
+        price: 210.00,
+        discountPercentage: 30.0,
         rating: 4.9,
         reviewCount: 5000,
         imageUrl:
-            'c:\Users\Adithya\OneDrive\Pictures\71Ous1tgIPL._AC_UF1000,1000_QL80_.jpg',
+            r'c:\Users\Adithya\OneDrive\Pictures\71Ous1tgIPL._AC_UF1000,1000_QL80_.jpg',
         categories: ['Nursing', 'Entrance'],
         isBestSeller: true,
       ),
@@ -432,4 +499,12 @@ class Book {
       ),
     ];
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Book && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }

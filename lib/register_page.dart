@@ -66,7 +66,9 @@ class _RegisterPageState extends State<RegisterPage> {
         } catch (e) {
           debugPrint('Error loading user data after registration: $e');
         }
-        context.go('/home');
+        if (mounted) {
+          context.go('/home');
+        }
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {

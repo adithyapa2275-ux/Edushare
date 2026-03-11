@@ -1,6 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -67,20 +68,50 @@ class _LoginPageState extends State<LoginPage>
       final email = emailController.text.trim();
       final password = passwordController.text.trim();
 
-      // Check for permanent Admin master password
-      if (email == 'admin@edushare.com' && password == 'admin123') {
-        // Success! Proceed to redirect
-      } else {
-        // Normal Firebase Auth
+      // Sign in with Firebase Auth
+      try {
         await FirebaseAuth.instance.signInWithEmailAndPassword(
           email: email,
           password: password,
         );
+      } on FirebaseAuthException catch (e) {
+        // Special case: Auto-initialize admin account if it doesn't exist
+        if (email == 'admin@edushare.com' &&
+            password == 'admin123' &&
+            (e.code == 'user-not-found' || e.code == 'invalid-credential')) {
+          try {
+            // Create the admin account
+            final userCredential = await FirebaseAuth.instance
+                .createUserWithEmailAndPassword(
+                  email: email,
+                  password: password,
+                );
+
+            if (userCredential.user != null) {
+              // Set admin flags in Firestore immediately
+              await FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(userCredential.user!.uid)
+                  .set({
+                    'name': 'Administrator',
+                    'email': email,
+                    'isAdmin': true,
+                    'role': 'admin',
+                    'createdAt': FieldValue.serverTimestamp(),
+                  });
+            }
+          } catch (createError) {
+            debugPrint('Error auto-initializing admin: $createError');
+            throw e; // Rethrow original error if creation also fails
+          }
+        } else {
+          rethrow;
+        }
       }
 
       if (!mounted) return;
 
-      if (emailController.text.trim() == 'admin@edushare.com') {
+      if (email == 'admin@edushare.com') {
         context.go('/admin');
       } else {
         context.go('/home');

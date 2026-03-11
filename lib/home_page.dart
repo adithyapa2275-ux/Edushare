@@ -8,6 +8,7 @@ import 'widgets/hero_banner.dart';
 import 'widgets/section_header.dart';
 import 'widgets/book_card.dart';
 import 'widgets/footer.dart';
+import 'widgets/category_pills.dart';
 import 'package:provider/provider.dart';
 import 'providers/search_provider.dart';
 import 'providers/marketplace_provider.dart';
@@ -37,12 +38,6 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future<void> _fetchAllBooks() async {
-    // Fetch user listings from Firestore - unawaited to avoid blocking
-    Provider.of<MarketplaceProvider>(
-      context,
-      listen: false,
-    ).fetchRecentListings();
-
     // Trigger all section futures INSTANTLY in parallel
     setState(() {
       _indianStudyMaterialsFuture = _apiService.fetchIndianStudyMaterials();
@@ -52,7 +47,13 @@ class _HomePageState extends State<HomePage> {
         'Engineering India S.Chand',
       );
       _class12BooksFuture = _apiService.searchBooks('NCERT CBSE Class 12');
-      _donateBooksFuture = _apiService.searchBooks('free academic books');
+      _donateBooksFuture = _apiService
+          .searchBooks('free academic books')
+          .then(
+            (books) => books
+                .map((b) => b.copyWith(isDonation: true, price: 0.0))
+                .toList(),
+          );
     });
   }
 
@@ -159,6 +160,7 @@ class _HomePageContent extends StatelessWidget {
       child: Column(
         children: [
           const HeroBanner(),
+          const CategoryPills(),
           _buildSection(
             context,
             '🎁 FREE / Donate Books',

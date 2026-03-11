@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'providers/cart_provider.dart';
 import 'widgets/custom_app_bar.dart';
+import 'widgets/book_image.dart';
 
 class CartPage extends StatelessWidget {
   const CartPage({super.key});
@@ -240,12 +241,6 @@ class CartPage extends StatelessWidget {
 
   Widget _buildBottomBar(BuildContext context, CartProvider cart) {
     double total = cart.totalPrice;
-    double discount = cart.items.entries.fold(0.0, (sum, entry) {
-      if (entry.key.discountPercentage <= 0) return sum;
-      double originalPrice =
-          entry.key.price / (1 - entry.key.discountPercentage / 100);
-      return sum + (originalPrice - entry.key.price) * entry.value;
-    });
     double deliveryCharges = total >= 700 ? 0 : 50;
     double finalAmount = total + deliveryCharges;
 
@@ -339,11 +334,11 @@ class _CartItemTile extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
-                child: Image.network(
-                  book.imageUrl,
+                child: BookImage(
+                  imageUrl: book.imageUrl,
+                  title: book.title,
                   width: 80,
                   height: 100,
-                  fit: BoxFit.cover,
                 ),
               ),
               const SizedBox(width: 16),

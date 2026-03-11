@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../core/colors.dart';
 import '../core/text_styles.dart';
 import '../providers/admin_provider.dart';
+import '../providers/user_provider.dart';
+import '../providers/sell_provider.dart';
 import 'views/overview_view.dart';
 import 'views/manage_users_view.dart';
 import 'views/manage_listings_view.dart';
+import 'views/manage_orders_view.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -21,12 +25,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   @override
   void initState() {
     super.initState();
-    // Initial fetch
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final adminProvider = Provider.of<AdminProvider>(context, listen: false);
-      adminProvider.fetchAllUsers();
-      adminProvider.fetchAllListings();
-    });
+    // No manual fetch needed as AdminProvider uses Streams now
   }
 
   @override
@@ -79,7 +78,24 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                   padding: const EdgeInsets.only(bottom: 20),
                   child: IconButton(
                     icon: const Icon(Icons.logout, color: Colors.red),
-                    onPressed: () => context.go('/login'),
+                    onPressed: () async {
+                      // Clear session data
+                      Provider.of<UserProvider>(
+                        context,
+                        listen: false,
+                      ).clearData();
+                      Provider.of<SellProvider>(
+                        context,
+                        listen: false,
+                      ).clearListings();
+
+                      // Sign out from Firebase
+                      await FirebaseAuth.instance.signOut();
+
+                      if (!mounted) return;
+                      // Navigate to Login
+                      context.go('/login');
+                    },
                   ),
                 ),
               ),
@@ -103,6 +119,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 ),
                 label: Text('Manage Listings'),
               ),
+              NavigationRailDestination(
+                icon: Icon(Icons.local_shipping_outlined),
+                selectedIcon: Icon(
+                  Icons.local_shipping,
+                  color: AppColors.primary,
+                ),
+                label: Text('Manage Orders'),
+              ),
             ],
           ),
 
@@ -124,7 +148,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             ? 'Dashboard Overview'
                             : _selectedIndex == 1
                             ? 'User Management'
-                            : 'Listing Moderation',
+                            : _selectedIndex == 2
+                                ? 'Listing Moderation'
+                                : 'Order Management',
                         style: AppTextStyles.h2,
                       ),
                       const Spacer(),
@@ -137,6 +163,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           );
                           p.fetchAllUsers();
                           p.fetchAllListings();
+                          p.fetchAllOrders();
                         },
                       ),
                     ],
@@ -151,6 +178,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       OverviewView(),
                       ManageUsersView(),
                       ManageListingsView(),
+                      ManageOrdersView(),
                     ],
                   ),
                 ),

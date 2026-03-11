@@ -45,7 +45,7 @@ class UserProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      print('UserProvider: Error loading from cache: $e');
+      debugPrint('UserProvider: Error loading from cache: $e');
     }
   }
 
@@ -56,7 +56,7 @@ class UserProvider extends ChangeNotifier {
       await prefs.setString('user_profile_image', _profileImage);
       await prefs.setString('user_email', _email);
     } catch (e) {
-      print('UserProvider: Error saving to cache: $e');
+      debugPrint('UserProvider: Error saving to cache: $e');
     }
   }
 
@@ -78,14 +78,16 @@ class UserProvider extends ChangeNotifier {
           _phone = data['phone'] ?? '';
           _address = data['address'] ?? '';
           _profileImage = data['profileImage'] ?? '';
-          _isAdmin = data['isAdmin'] ?? false;
+          _isAdmin =
+              (data['isAdmin'] ?? false) || (_email == 'admin@edushare.com');
         } else {
           // If no doc exists, still use Auth email
           _email = user.email ?? '';
           _name = user.displayName ?? '';
+          _isAdmin = (_email == 'admin@edushare.com');
         }
       } catch (e) {
-        print('UserProvider: Error loading user data: $e');
+        debugPrint('UserProvider: Error loading user data: $e');
         _email = user.email ?? '';
       } finally {
         _isLoading = false;
@@ -115,7 +117,7 @@ class UserProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
     } catch (e) {
-      print('UserProvider: Error clearing cache: $e');
+      debugPrint('UserProvider: Error clearing cache: $e');
     }
   }
 

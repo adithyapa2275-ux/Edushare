@@ -1,7 +1,6 @@
 import 'package:cloudinary_public/cloudinary_public.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:typed_data';
 
 class CloudinaryService {
   // Replace these with your actual Cloudinary credentials
@@ -51,7 +50,7 @@ class CloudinaryService {
       return response.secureUrl;
     } on CloudinaryException catch (e) {
       if (kDebugMode) {
-        print('Cloudinary Error: ${e.message}');
+        debugPrint('CloudinaryService: Error uploading to Cloudinary: $e');
         print('Request: ${e.request}');
       }
       return null;

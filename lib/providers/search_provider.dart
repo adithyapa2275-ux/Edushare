@@ -36,7 +36,7 @@ class SearchProvider extends ChangeNotifier {
     try {
       _searchResults = await _apiService.searchBooks(query);
     } catch (e) {
-      print("Search error: $e");
+      debugPrint("Search error: $e");
       _searchResults = [];
     } finally {
       _isLoading = false;

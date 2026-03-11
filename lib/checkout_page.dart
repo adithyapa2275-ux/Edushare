@@ -6,6 +6,9 @@ import 'providers/cart_provider.dart';
 import 'providers/order_provider.dart';
 import 'models/order_model.dart';
 import 'package:go_router/go_router.dart';
+import 'widgets/book_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CheckoutPage extends StatefulWidget {
   final Map<Book, int> items;
@@ -101,7 +104,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
             _currentStep = step;
           });
         },
-        onStepContinue: () {
+        onStepContinue: () async {
           if (_currentStep < 2) {
             setState(() {
               _currentStep += 1;
@@ -110,23 +113,49 @@ class _CheckoutPageState extends State<CheckoutPage> {
             // Create Order
             final order = OrderModel(
               id: DateTime.now().millisecondsSinceEpoch.toString(),
+              userId: FirebaseAuth.instance.currentUser?.uid ?? '',
               date: DateTime.now(),
               items: Map.from(widget.items),
               totalAmount: _totalPrice,
               deliveryAddress: "$_name, $_address\n$_phone",
             );
 
-            // Save Order
-            Provider.of<OrderProvider>(context, listen: false).addOrder(order);
+            try {
+              // 1. Save to Firestore for Admin Dashboard
+              var orderData = order.toMap();
+              orderData['customerName'] = _name; // For convenience
+              orderData['itemCount'] = order.items.length; // For convenience
+              
+              await FirebaseFirestore.instance.collection('orders').add(orderData);
 
-            // Clear Cart
-            final cart = Provider.of<CartProvider>(context, listen: false);
-            cart.clearCart();
+              if (!mounted) return;
 
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Order Placed Successfully!')),
-            );
-            context.go('/orders'); // Redirect to Orders page
+              // 2. Save to local OrderProvider for immediate UI update
+              Provider.of<OrderProvider>(
+                context,
+                listen: false,
+              ).addOrder(order);
+
+              // 3. Clear Cart
+              final cart = Provider.of<CartProvider>(context, listen: false);
+              cart.clearCart();
+
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Order Placed Successfully!')),
+                );
+                context.go('/orders'); // Redirect to Orders page
+              }
+            } catch (e) {
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Failed to place order: $e'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+              }
+            }
           }
         },
         onStepCancel: () {
@@ -215,11 +244,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                     padding: const EdgeInsets.only(bottom: 16.0),
                     child: Row(
                       children: [
-                        Image.network(
-                          entry.key.imageUrl,
+                        BookImage(
+                          imageUrl: entry.key.imageUrl,
+                          title: entry.key.title,
                           width: 60,
                           height: 80,
-                          fit: BoxFit.cover,
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -275,88 +304,88 @@ class _CheckoutPageState extends State<CheckoutPage> {
             title: const Text('Payment Options'),
             content: Column(
               children: [
-                RadioListTile(
-                  value: 'upi',
+                RadioGroup<String>(
                   groupValue: _paymentMethod,
                   onChanged: (val) =>
                       setState(() => _paymentMethod = val.toString()),
-                  title: const Text("UPI"),
-                  subtitle: const Text("Google Pay, PhonePe, Paytm"),
-                ),
-                if (_paymentMethod == 'upi')
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      right: 16,
-                      bottom: 8,
-                    ),
-                    child: TextField(
-                      decoration: const InputDecoration(
-                        labelText: 'Enter UPI ID',
-                        border: OutlineInputBorder(),
-                        isDense: true,
+                  child: Column(
+                    children: [
+                      RadioListTile(
+                        value: 'upi',
+                        title: const Text("UPI"),
+                        subtitle: const Text("Google Pay, PhonePe, Paytm"),
                       ),
-                    ),
-                  ),
-                RadioListTile(
-                  value: 'card',
-                  groupValue: _paymentMethod,
-                  onChanged: (val) =>
-                      setState(() => _paymentMethod = val.toString()),
-                  title: const Text("Credit / Debit / ATM Card"),
-                ),
-                if (_paymentMethod == 'card')
-                  Padding(
-                    padding: const EdgeInsets.only(
-                      left: 16,
-                      right: 16,
-                      bottom: 8,
-                    ),
-                    child: Column(
-                      children: [
-                        TextField(
-                          decoration: const InputDecoration(
-                            labelText: 'Card Number',
-                            border: OutlineInputBorder(),
-                            isDense: true,
+                      if (_paymentMethod == 'upi')
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            left: 16,
+                            right: 16,
+                            bottom: 8,
                           ),
-                          keyboardType: TextInputType.number,
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextField(
-                                decoration: const InputDecoration(
-                                  labelText: 'Expiry Date (MM/YY)',
-                                  border: OutlineInputBorder(),
-                                  isDense: true,
-                                ),
-                              ),
+                          child: TextField(
+                            decoration: const InputDecoration(
+                              labelText: 'Enter UPI ID',
+                              border: OutlineInputBorder(),
+                              isDense: true,
                             ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: TextField(
+                          ),
+                        ),
+                      RadioListTile(
+                        value: 'card',
+                        title: const Text("Credit / Debit / ATM Card"),
+                      ),
+                      if (_paymentMethod == 'card')
+                        Padding(
+                          padding: const EdgeInsets.only(
+                            left: 16,
+                            right: 16,
+                            bottom: 8,
+                          ),
+                          child: Column(
+                            children: [
+                              TextField(
                                 decoration: const InputDecoration(
-                                  labelText: 'CVV',
+                                  labelText: 'Card Number',
                                   border: OutlineInputBorder(),
                                   isDense: true,
                                 ),
-                                obscureText: true,
                                 keyboardType: TextInputType.number,
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      decoration: const InputDecoration(
+                                        labelText: 'Expiry Date (MM/YY)',
+                                        border: OutlineInputBorder(),
+                                        isDense: true,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: TextField(
+                                      decoration: const InputDecoration(
+                                        labelText: 'CVV',
+                                        border: OutlineInputBorder(),
+                                        isDense: true,
+                                      ),
+                                      obscureText: true,
+                                      keyboardType: TextInputType.number,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ],
-                    ),
+                      RadioListTile(
+                        value: 'cod',
+                        title: const Text("Cash on Delivery"),
+                      ),
+                    ],
                   ),
-                RadioListTile(
-                  value: 'cod',
-                  groupValue: _paymentMethod,
-                  onChanged: (val) =>
-                      setState(() => _paymentMethod = val.toString()),
-                  title: const Text("Cash on Delivery"),
                 ),
               ],
             ),

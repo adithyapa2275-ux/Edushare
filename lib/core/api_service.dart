@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter/foundation.dart';
 import '../models/book.dart';
 
 class ApiService {
@@ -23,6 +24,7 @@ class ApiService {
       imageUrl:
           'https://books.google.com/books/content?id=9W9DAAAAYAAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api',
       price: 150,
+      discountPercentage: 25.0,
       description: 'Standard textbook for Class 12 Mathematics.',
       rating: 4.5,
       reviewCount: 120,
@@ -34,6 +36,7 @@ class ApiService {
       imageUrl:
           'https://books.google.com/books/content?id=mOskEAAAQBAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api',
       price: 450,
+      discountPercentage: 20.0,
       description: 'Higher Engineering Mathematics for technical students.',
       rating: 4.8,
       reviewCount: 850,
@@ -45,6 +48,7 @@ class ApiService {
       imageUrl:
           'https://books.google.com/books/content?id=i-SNDwAAQBAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api',
       price: 899,
+      discountPercentage: 30.0,
       description: 'The definitive guide to algorithms.',
       rating: 4.9,
       reviewCount: 3200,
@@ -56,6 +60,7 @@ class ApiService {
       imageUrl:
           'https://books.google.com/books/content?id=XmYpEAAAQBAJ&printsec=frontcover&img=1&zoom=1&source=gbs_api',
       price: 1200,
+      discountPercentage: 15.0,
       description: 'Essential anatomy textbook for medical students.',
       rating: 4.7,
       reviewCount: 540,
@@ -68,17 +73,21 @@ class ApiService {
 
     // Check cache first
     if (_cache.containsKey(query)) {
-      print('ApiService: Cache hit for $query');
+      debugPrint('ApiService: Cache hit for $query');
       return _cache[query]!;
     }
 
     // Check if a request for this query is already in progress
     if (_inProgressRequests.containsKey(query)) {
-      print('ApiService: Request already in progress for $query, waiting...');
+      debugPrint(
+        'ApiService: Request already in progress for $query, waiting...',
+      );
       return _inProgressRequests[query]!;
     }
 
-    print('ApiService: Starting search for $query (Attempt ${retries + 1})');
+    debugPrint(
+      'ApiService: Starting search for $query (Attempt ${retries + 1})',
+    );
     final Future<List<Book>> requestFuture = _performSearch(
       query,
       retries: retries,
@@ -90,7 +99,7 @@ class ApiService {
       _cache[query] = results;
       return results;
     } catch (e) {
-      print('ApiService: Fatal error for $query: $e');
+      debugPrint('ApiService: Fatal error for $query: $e');
       return _fallbackBooks;
     } finally {
       _inProgressRequests.remove(query);
@@ -111,13 +120,13 @@ class ApiService {
         final items = data['items'] as List<dynamic>? ?? [];
         return items.map((item) => _mapGoogleBookToBook(item)).toList();
       } else {
-        print(
+        debugPrint(
           'ApiService: Google Error ${response.statusCode}. Trying Open Library.',
         );
         return await _searchOpenLibrary(query);
       }
     } catch (e) {
-      print(
+      debugPrint(
         'ApiService: Google Timeout/Exception for $query. Trying Open Library.',
       );
       return await _searchOpenLibrary(query);
@@ -142,7 +151,7 @@ class ApiService {
         return _generateMockBooks(query);
       }
     } catch (e) {
-      print(
+      debugPrint(
         'ApiService: OL Timeout/Exception for $query. Using Mock Fallback.',
       );
       return _generateMockBooks(query);
@@ -151,15 +160,16 @@ class ApiService {
 
   /// Generates mock books so the app NEVER stays stuck or empty
   List<Book> _generateMockBooks(String query) {
-    print('ApiService: Generating mock books for "$query"');
+    debugPrint('ApiService: Generating mock books for "$query"');
     return List.generate(5, (index) {
       return Book(
         id: 'mock_${query.replaceAll(' ', '_')}_$index',
         title: '$query - Volume ${index + 1}',
         author: 'EduShare Author',
         imageUrl: '', // Will trigger default placeholder
-        price: 200.0 + (index * 50),
+        price: 150.0 + (index * 50),
         description: 'Quality study material for $query.',
+        discountPercentage: 20.0,
         rating: 4.0 + (index * 0.2),
         reviewCount: 50 + (index * 10),
       );
@@ -187,7 +197,7 @@ class ApiService {
       }
       return uniqueBooks.values.toList()..shuffle();
     } catch (e) {
-      print('Error fetching Indian materials: $e');
+      debugPrint('Error fetching Indian materials: $e');
       return [];
     }
   }
@@ -228,8 +238,11 @@ class ApiService {
       price = (saleInfo['listPrice']['amount'] as num?)?.toDouble() ?? 0.0;
     } else {
       // Mock price if not for sale (common for previews)
-      price = 15.0 + (title.length % 50);
+      price = 95.0 + (title.length % 80);
     }
+
+    // Force minimum price to avoid single-digit prices from API
+    price = price.clamp(110.0, 5000.0);
 
     return Book(
       id: id,
@@ -240,6 +253,7 @@ class ApiService {
       description: description,
       rating: rating,
       reviewCount: reviewCount,
+      discountPercentage: 25.0, // Default discount for premium feel
     );
   }
 
@@ -264,17 +278,18 @@ class ApiService {
     }
 
     // Mock price as Open Library is information-only
-    double price = 20.0 + (title.length % 60);
+    double price = 100.0 + (title.length % 100);
 
     return Book(
       id: id,
       title: title,
       author: author,
       imageUrl: imageUrl,
-      price: price,
+      price: price.clamp(100.0, 1000.0),
       description: description,
       rating: 4.2, // Neutral rating
       reviewCount: 10 + (title.length % 100),
+      discountPercentage: 25.0,
     );
   }
 
@@ -301,7 +316,7 @@ class ApiService {
         }
       }
     } catch (e) {
-      print('ApiService: Error fetching book by ISBN: $e');
+      debugPrint('ApiService: Error fetching book by ISBN: $e');
     }
     return null;
   }

@@ -66,64 +66,84 @@ class _SellBookPageState extends State<SellBookPage> {
 
       String imageUrl = _imageUrlController.text;
 
-      // Upload image if a local one was picked
-      if (_pickedFile != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Uploading cover image...')),
-        );
+      try {
+        // Upload image if a local one was picked
+        if (_pickedFile != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Uploading cover image...')),
+          );
 
-        final ImageService imageService = ImageService();
-        final String? uploadedUrl = await imageService.uploadImage(
-          _pickedFile!,
-          'book_covers',
-        );
+          final ImageService imageService = ImageService();
+          final String? uploadedUrl = await imageService.uploadImage(
+            _pickedFile!,
+            'book_covers',
+          );
 
-        if (uploadedUrl != null) {
-          imageUrl = uploadedUrl;
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Image uploaded! Listing book...')),
-            );
-          }
-        } else {
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Image upload failed. Using placeholder.'),
-              ),
-            );
+          if (uploadedUrl != null) {
+            imageUrl = uploadedUrl;
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Image uploaded! Listing book...'),
+                ),
+              );
+            }
+          } else {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Image upload failed. Using placeholder.'),
+                ),
+              );
+            }
           }
         }
+
+        if (imageUrl.isEmpty) {
+          imageUrl = 'https://via.placeholder.com/300?text=No+Image';
+        }
+
+        final book = Book(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          title: _titleController.text,
+          author: _authorController.text,
+          description: _descController.text,
+          price: _isDonation
+              ? 0.0
+              : (double.tryParse(_priceController.text) ?? 0.0),
+          rating: 0.0,
+          reviewCount: 0,
+          imageUrl: imageUrl,
+          isDonation: _isDonation,
+          isbn: _isbnController.text,
+        );
+
+        if (!mounted) return;
+
+        await Provider.of<SellProvider>(context, listen: false).addBook(book);
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Book Listed Successfully!')),
+          );
+
+          context.pushReplacement('/my_listings');
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Error listing book: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+        debugPrint('Submit Form Error: $e');
+      } finally {
+        if (mounted) {
+          setState(() => _isSubmitting = false);
+        }
       }
-
-      if (imageUrl.isEmpty) {
-        imageUrl = 'https://via.placeholder.com/300?text=No+Image';
-      }
-
-      final book = Book(
-        id: DateTime.now().millisecondsSinceEpoch.toString(),
-        title: _titleController.text,
-        author: _authorController.text,
-        description: _descController.text,
-        price: _isDonation
-            ? 0.0
-            : (double.tryParse(_priceController.text) ?? 0.0),
-        rating: 0.0,
-        reviewCount: 0,
-        imageUrl: imageUrl,
-        isDonation: _isDonation,
-        isbn: _isbnController.text,
-      );
-
-      if (!mounted) return;
-
-      await Provider.of<SellProvider>(context, listen: false).addBook(book);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Book Listed Successfully!')),
-      );
-
-      context.pushReplacement('/my_listings');
     }
   }
 
@@ -143,7 +163,7 @@ class _SellBookPageState extends State<SellBookPage> {
               borderRadius: BorderRadius.circular(12),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 5),
                 ),
@@ -216,7 +236,7 @@ class _SellBookPageState extends State<SellBookPage> {
                       'Give this book for free to help fellow students.',
                     ),
                     value: _isDonation,
-                    activeColor: AppColors.secondary,
+                    activeThumbColor: AppColors.secondary,
                     onChanged: (val) {
                       setState(() {
                         _isDonation = val;
@@ -259,10 +279,12 @@ class _SellBookPageState extends State<SellBookPage> {
                     ),
                     keyboardType: TextInputType.number,
                     validator: (value) {
-                      if (value == null || value.isEmpty)
+                      if (value == null || value.isEmpty) {
                         return 'Please enter price';
-                      if (double.tryParse(value) == null)
+                      }
+                      if (double.tryParse(value) == null) {
                         return 'Invalid price';
+                      }
                       return null;
                     },
                   ),

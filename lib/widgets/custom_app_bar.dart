@@ -278,7 +278,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 ),
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  backgroundColor: AppColors.primary.withOpacity(0.1),
+                  backgroundColor: AppColors.primary.withValues(alpha: 0.1),
                 ),
               ),
               const SizedBox(width: 16),

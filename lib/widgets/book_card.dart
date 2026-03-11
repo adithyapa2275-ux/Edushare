@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/colors.dart';
-import '../core/text_styles.dart';
 import '../models/book.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:io';
+
+import 'book_image.dart';
 
 class BookCard extends StatefulWidget {
   final Book book;
@@ -31,7 +30,11 @@ class _BookCardState extends State<BookCard> {
         onExit: (_) => setState(() => _isHovered = false),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          transform: Matrix4.identity()..translate(0, _isHovered ? -8.0 : 0.0),
+          transform: Matrix4.translationValues(
+            0.0,
+            _isHovered ? -8.0 : 0.0,
+            0.0,
+          ),
           margin: const EdgeInsets.only(
             right: 24,
             bottom: 16,
@@ -41,7 +44,7 @@ class _BookCardState extends State<BookCard> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(_isHovered ? 0.15 : 0.05),
+                color: Colors.black.withValues(alpha: _isHovered ? 0.15 : 0.05),
                 blurRadius: _isHovered ? 16 : 8,
                 offset: Offset(0, _isHovered ? 8 : 4),
               ),
@@ -59,34 +62,9 @@ class _BookCardState extends State<BookCard> {
                   aspectRatio: 2 / 3,
                   child: Stack(
                     children: [
-                      _buildBookImage(widget.book.imageUrl, widget.book.title),
-                      Positioned(
-                        top: 8,
-                        left: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.green,
-                            borderRadius: BorderRadius.circular(4),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 4,
-                              ),
-                            ],
-                          ),
-                          child: Text(
-                            '${widget.book.discountPercentage.toInt()}% OFF',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ),
+                      BookImage(
+                        imageUrl: widget.book.imageUrl,
+                        title: widget.book.title,
                       ),
                       if (widget.book.isDonation || widget.book.price == 0)
                         Positioned(
@@ -102,7 +80,7 @@ class _BookCardState extends State<BookCard> {
                               borderRadius: BorderRadius.circular(4),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.2),
+                                  color: Colors.black.withValues(alpha: 0.2),
                                   blurRadius: 4,
                                 ),
                               ],
@@ -145,22 +123,42 @@ class _BookCardState extends State<BookCard> {
                     const SizedBox(height: 8),
                     Row(
                       children: [
-                        const Icon(
-                          Icons.star,
-                          size: 16,
-                          color: AppColors.warning,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: widget.book.rating >= 4.0
+                                ? AppColors.success
+                                : AppColors.warning,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            children: [
+                              Text(
+                                widget.book.rating.toString(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                              const SizedBox(width: 2),
+                              const Icon(
+                                Icons.star,
+                                size: 10,
+                                color: Colors.white,
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          widget.book.rating.toString(),
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 6),
                         Flexible(
                           child: Text(
                             '(${widget.book.reviewCount})',
-                            style: Theme.of(context).textTheme.bodySmall,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: Colors.grey, fontSize: 11),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
@@ -171,16 +169,48 @@ class _BookCardState extends State<BookCard> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          child: Text(
-                            widget.book.isDonation || widget.book.price == 0
-                                ? 'FREE'
-                                : '₹${widget.book.price}',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(
-                                  color: AppColors.secondary,
-                                  fontSize: 18,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                widget.book.isDonation || widget.book.price == 0
+                                    ? 'FREE'
+                                    : '₹${widget.book.price.toStringAsFixed(0)}',
+                                style: Theme.of(context).textTheme.titleLarge
+                                    ?.copyWith(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (!widget.book.isDonation &&
+                                  widget.book.price > 0 &&
+                                  widget.book.effectiveDiscountPercentage > 0)
+                                Row(
+                                  children: [
+                                    Text(
+                                      '₹${widget.book.originalPrice.toStringAsFixed(0)}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            decoration:
+                                                TextDecoration.lineThrough,
+                                            color: Colors.grey,
+                                          ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${widget.book.effectiveDiscountPercentage.toInt()}% off',
+                                      style: const TextStyle(
+                                        color: Colors.green,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                            overflow: TextOverflow.ellipsis,
+                            ],
                           ),
                         ),
                         const SizedBox(width: 4),
@@ -190,10 +220,16 @@ class _BookCardState extends State<BookCard> {
                               context,
                               listen: false,
                             ).addToCart(widget.book);
+                            ScaffoldMessenger.of(context).clearSnackBars();
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text(
                                   '${widget.book.title} added to cart!',
+                                ),
+                                duration: const Duration(seconds: 2),
+                                action: SnackBarAction(
+                                  label: 'VIEW CART',
+                                  onPressed: () => context.push('/cart'),
                                 ),
                               ),
                             );
@@ -219,99 +255,6 @@ class _BookCardState extends State<BookCard> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildBookImage(String imageUrl, String title) {
-    if (imageUrl.isEmpty) {
-      return _buildErrorImage(title);
-    }
-    if (imageUrl.startsWith('http') || imageUrl.startsWith('blob:') || kIsWeb) {
-      return Image.network(
-        imageUrl,
-        fit: BoxFit.cover,
-        loadingBuilder: (context, child, loadingProgress) {
-          if (loadingProgress == null) return child;
-          return Container(
-            color: Colors.grey[100],
-            child: Center(
-              child: CircularProgressIndicator(
-                value: loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                          loadingProgress.expectedTotalBytes!
-                    : null,
-                strokeWidth: 2,
-              ),
-            ),
-          );
-        },
-        errorBuilder: (context, error, stackTrace) {
-          if (kDebugMode) {
-            print('Image Load Error for $imageUrl: $error');
-          }
-          return _buildErrorImage(title);
-        },
-      );
-    } else if (imageUrl.isNotEmpty) {
-      return Image.file(
-        File(imageUrl),
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => _buildErrorImage(title),
-      );
-    }
-    return _buildErrorImage(title);
-  }
-
-  Widget _buildErrorImage(String title) {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            AppColors.primary.withOpacity(0.2),
-            AppColors.primary.withOpacity(0.05),
-          ],
-        ),
-      ),
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Positioned(
-            top: 20,
-            child: Icon(
-              Icons.book_outlined,
-              size: 64,
-              color: AppColors.primary.withOpacity(0.1),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Text(
-              title,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.h3.copyWith(
-                color: AppColors.primary.withOpacity(0.6),
-                fontSize: 14,
-                fontStyle: FontStyle.italic,
-              ),
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          Positioned(
-            bottom: 20,
-            child: Text(
-              'EduShare Edition',
-              style: TextStyle(
-                color: AppColors.primary.withOpacity(0.3),
-                fontSize: 10,
-                letterSpacing: 1.2,
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

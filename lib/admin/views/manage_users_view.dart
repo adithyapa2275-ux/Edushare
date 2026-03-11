@@ -22,9 +22,12 @@ class ManageUsersView extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'All Registered Users',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).textTheme.displayLarge?.color,
+                ),
               ),
               Text(
                 '${users.length} Users Found',
@@ -36,77 +39,96 @@ class ManageUsersView extends StatelessWidget {
           Expanded(
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).cardColor,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.shade200),
+                border: Border.all(
+                  color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: SingleChildScrollView(
                   scrollDirection: Axis.vertical,
-                  child: DataTable(
-                    headingRowColor: WidgetStateProperty.all(
-                      Colors.grey.shade50,
-                    ),
-                    columns: const [
-                      DataColumn(label: Text('Name')),
-                      DataColumn(label: Text('Email')),
-                      DataColumn(label: Text('Role')),
-                      DataColumn(label: Text('Actions')),
-                    ],
-                    rows: users.map((user) {
-                      bool isAdmin = user['isAdmin'] ?? false;
-                      return DataRow(
-                        cells: [
-                          DataCell(Text(user['name'] ?? 'N/A')),
-                          DataCell(Text(user['email'] ?? 'N/A')),
-                          DataCell(
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: isAdmin
-                                    ? Colors.purple.shade50
-                                    : Colors.blue.shade50,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                isAdmin ? 'Admin' : 'User',
-                                style: TextStyle(
-                                  color: isAdmin ? Colors.purple : Colors.blue,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: DataTable(
+                      headingRowColor: WidgetStateProperty.all(
+                        Theme.of(context).brightness == Brightness.dark
+                            ? Colors.white.withValues(alpha: 0.02)
+                            : Colors.grey.shade50,
+                      ),
+                      dataRowColor: WidgetStateProperty.all(
+                        Theme.of(context).cardColor,
+                      ),
+                      columns: const [
+                        DataColumn(label: Text('Name')),
+                        DataColumn(label: Text('Email')),
+                        DataColumn(label: Text('Role')),
+                        DataColumn(label: Text('Actions')),
+                      ],
+                      rows: users.map((user) {
+                        bool isAdmin = user['isAdmin'] ?? false;
+                        return DataRow(
+                          cells: [
+                            DataCell(Text(user['name'] ?? 'N/A')),
+                            DataCell(Text(user['email'] ?? 'N/A')),
+                            DataCell(
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isAdmin
+                                      ? Colors.purple.withValues(alpha: 0.1)
+                                      : Colors.blue.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  isAdmin ? 'Admin' : 'User',
+                                  style: TextStyle(
+                                    color: isAdmin
+                                        ? Colors.purpleAccent
+                                        : Colors.blueAccent,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
-                          DataCell(
-                            isAdmin
-                                ? TextButton(
-                                    onPressed: () =>
-                                        adminProvider.toggleUserAdminStatus(
-                                          user['uid'],
-                                          true,
-                                        ),
-                                    child: const Text(
-                                      'Revoke Admin',
-                                      style: TextStyle(color: Colors.red),
+                            DataCell(
+                              isAdmin
+                                  ? TextButton(
+                                      onPressed: () =>
+                                          adminProvider.toggleUserAdminStatus(
+                                            user['uid'],
+                                            true,
+                                          ),
+                                      child: const Text(
+                                        'Revoke Admin',
+                                        style: TextStyle(color: Colors.red),
+                                      ),
+                                    )
+                                  : TextButton(
+                                      onPressed: () =>
+                                          adminProvider.toggleUserAdminStatus(
+                                            user['uid'],
+                                            false,
+                                          ),
+                                      child: const Text('Make Admin'),
                                     ),
-                                  )
-                                : TextButton(
-                                    onPressed: () =>
-                                        adminProvider.toggleUserAdminStatus(
-                                          user['uid'],
-                                          false,
-                                        ),
-                                    child: const Text('Make Admin'),
-                                  ),
-                          ),
-                        ],
-                      );
-                    }).toList(),
+                            ),
+                          ],
+                        );
+                      }).toList(),
+                    ),
                   ),
                 ),
               ),

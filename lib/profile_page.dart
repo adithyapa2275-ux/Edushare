@@ -67,9 +67,11 @@ class _ProfilePageState extends State<ProfilePage> {
           context,
           listen: false,
         ).updateUser(profileImage: imageUrl);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image uploaded successfully!')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Image uploaded successfully!')),
+          );
+        }
       } else if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -101,13 +103,18 @@ class _ProfilePageState extends State<ProfilePage> {
 
     // Sync controllers if not editing
     if (!_isEditing) {
-      if (_nameController.text != user.name) _nameController.text = user.name;
-      if (_emailController.text != user.email)
+      if (_nameController.text != user.name) {
+        _nameController.text = user.name;
+      }
+      if (_emailController.text != user.email) {
         _emailController.text = user.email;
-      if (_phoneController.text != user.phone)
+      }
+      if (_phoneController.text != user.phone) {
         _phoneController.text = user.phone;
-      if (_addressController.text != user.address)
+      }
+      if (_addressController.text != user.address) {
         _addressController.text = user.address;
+      }
     }
 
     return Scaffold(
@@ -144,7 +151,7 @@ class _ProfilePageState extends State<ProfilePage> {
                               radius: 60,
                               backgroundColor: Theme.of(
                                 context,
-                              ).primaryColor.withOpacity(0.1),
+                              ).primaryColor.withValues(alpha: 0.1),
                               backgroundImage: user.profileImage.isNotEmpty
                                   ? (user.profileImage.startsWith('http')
                                         ? NetworkImage(user.profileImage)
@@ -306,7 +313,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                 // Sign out from Firebase
                                 // Sign out from Firebase
                                 await FirebaseAuth.instance.signOut();
-                                // Better to add `FirebaseAuth.instance.signOut()` here for safety.
+                                if (!context.mounted) return;
 
                                 // Navigate to Login
                                 context.go('/login');

@@ -6,9 +6,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'providers/cart_provider.dart';
 import 'providers/favorites_provider.dart';
+import 'providers/marketplace_provider.dart';
 import 'widgets/custom_app_bar.dart';
-import 'dart:io';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'widgets/book_image.dart';
+import 'widgets/book_card.dart';
 
 class BookDetailsPage extends StatefulWidget {
   final Book book;
@@ -61,242 +62,425 @@ class _DesktopLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
       children: [
-        // Left Column: Image & Buttons
-        SizedBox(
-          width: 400,
-          child: Column(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade200),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                padding: const EdgeInsets.all(16),
-                child: _buildBookImage(context, book.imageUrl, height: 450),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Provider.of<CartProvider>(
-                          context,
-                          listen: false,
-                        ).addToCart(book);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('${book.title} added to cart!'),
-                            duration: const Duration(seconds: 2),
-                            action: SnackBarAction(
-                              label: 'VIEW CART',
-                              onPressed: () => context.push('/cart'),
-                            ),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(
-                          0xFFFF9F00,
-                        ), // Flipkart Yellow
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      child: const Text(
-                        'ADD TO CART',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        context.push('/checkout', extra: {book: 1});
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(
-                          0xFFFB641B,
-                        ), // Flipkart Orange
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      child: const Text(
-                        'BUY NOW',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 32),
-        // Right Column: Details
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _Breadcrumb(title: book.title),
-              const SizedBox(height: 8),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    book.title,
-                    style: AppTextStyles.h2.copyWith(fontSize: 28),
-                  ),
-                  Consumer<FavoritesProvider>(
-                    builder: (context, favorites, _) {
-                      final isFav = favorites.isFavorite(book);
-                      return IconButton(
-                        icon: Icon(
-                          isFav ? Icons.favorite : Icons.favorite_border,
-                          color: isFav ? Colors.red : AppColors.textSecondary,
-                          size: 32,
-                        ),
-                        onPressed: () => favorites.toggleFavorite(book),
-                      );
-                    },
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Row(
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Left Column: Image & Buttons
+            SizedBox(
+              width: 400,
+              child: Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
                     decoration: BoxDecoration(
-                      color: AppColors.success,
+                      border: Border.all(color: Colors.grey.shade200),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    padding: const EdgeInsets.all(16),
+                    child: BookImage(
+                      imageUrl: book.imageUrl,
+                      title: book.title,
+                      height: 450,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            Provider.of<CartProvider>(
+                              context,
+                              listen: false,
+                            ).addToCart(book);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('${book.title} added to cart!'),
+                                duration: const Duration(seconds: 2),
+                                action: SnackBarAction(
+                                  label: 'VIEW CART',
+                                  onPressed: () => context.push('/cart'),
+                                ),
+                              ),
+                            );
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(
+                              0xFFFF9F00,
+                            ), // Flipkart Yellow
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          child: const Text(
+                            'ADD TO CART',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () {
+                            context.push('/checkout', extra: {book: 1});
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(
+                              0xFFFB641B,
+                            ), // Flipkart Orange
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          child: const Text(
+                            'BUY NOW',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 32),
+            // Right Column: Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _Breadcrumb(title: book.title),
+                  const SizedBox(height: 8),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        book.title,
+                        style: AppTextStyles.h2.copyWith(
+                          fontSize: 28,
+                          color: Theme.of(context).textTheme.displayLarge?.color,
+                        ),
+                      ),
+                      Consumer<FavoritesProvider>(
+                        builder: (context, favorites, _) {
+                          final isFav = favorites.isFavorite(book);
+                          return IconButton(
+                            icon: Icon(
+                              isFav ? Icons.favorite : Icons.favorite_border,
+                              color: isFav ? Colors.red : AppColors.textSecondary,
+                              size: 32,
+                            ),
+                            onPressed: () => favorites.toggleFavorite(book),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.success,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          children: [
+                            Text(
+                              book.rating.toString(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Icon(Icons.star, size: 12, color: Colors.white),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${book.reviewCount} Ratings & Reviews',
+                        style: AppTextStyles.bodyMedium.copyWith(color: Colors.grey),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.baseline,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Text(
+                        '₹${book.price}',
+                        style: Theme.of(
+                          context,
+                        ).textTheme.displayLarge?.copyWith(fontSize: 32),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        '₹${book.originalPrice.toStringAsFixed(0)}',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          decoration: TextDecoration.lineThrough,
+                          color: Colors.grey,
+                        ),
+                      ),
+                      Text(
+                        '${book.effectiveDiscountPercentage.toInt()}% off',
+                        style: const TextStyle(
+                          color: AppColors.success,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  // Offers
+                  const Text(
+                    'Available offers',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  _OfferItem(
+                    icon: Icons.local_offer,
+                    text:
+                        'Bank Offer 5% Unlimited Cashback on Axis Bank Credit Card',
+                  ),
+                  _OfferItem(
+                    icon: Icons.local_offer,
+                    text:
+                        'Special Price Get extra 10% off (price inclusive of discount)',
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Trust & Safety Markers
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white.withValues(alpha: 0.05)
+                          : Colors.grey[50],
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Theme.of(
+                          context,
+                        ).dividerColor.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    child: Column(
+                      children: [
+                        _TrustMarker(
+                          icon: Icons.high_quality,
+                          title: 'Quality Checked',
+                          subtitle: 'Verified for condition & authenticity',
+                        ),
+                        const Divider(height: 24),
+                        _TrustMarker(
+                          icon: Icons.security,
+                          title: 'Secure Payment',
+                          subtitle: '100% safe and encrypted transactions',
+                        ),
+                        const Divider(height: 24),
+                        _TrustMarker(
+                          icon: Icons.assignment_return,
+                          title: '7 Day Return',
+                          subtitle: 'Easy returns if not satisfied',
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Seller Info
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade200),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: Row(
                       children: [
-                        Text(
-                          book.rating.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
+                        CircleAvatar(
+                          backgroundColor: AppColors.primary.withValues(alpha: 0.1),
+                          child: Text(
+                            book.sellerName[0].toUpperCase(),
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        const Icon(Icons.star, size: 12, color: Colors.white),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    'Seller: ${book.sellerName}',
+                                    style: const TextStyle(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  if (!book.isDonation &&
+                                      book.price > 0 &&
+                                      book.effectiveDiscountPercentage > 0)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.assured,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: const Text(
+                                        'VERIFIED',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 8,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              Text(
+                                'Joined since ${book.uploadedAt != null ? "${book.uploadedAt!.day}/${book.uploadedAt!.month}/${book.uploadedAt!.year}" : "2024"}',
+                                style: TextStyle(color: Colors.grey, fontSize: 12),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Column(
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.star,
+                                  size: 16,
+                                  color: Colors.amber,
+                                ),
+                                const SizedBox(width: 4),
+                                const Text(
+                                  '4.5',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                            const Text(
+                              'Seller Rating',
+                              style: TextStyle(fontSize: 10, color: Colors.grey),
+                            ),
+                          ],
+                        ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${book.reviewCount} Ratings & Reviews',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      color: Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(
-                    '₹${book.price}',
-                    style: AppTextStyles.h1.copyWith(fontSize: 32),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '₹${(book.price * (1 + book.discountPercentage / 100)).toStringAsFixed(2)}',
-                    style: AppTextStyles.bodyMedium.copyWith(
-                      decoration: TextDecoration.lineThrough,
-                      color: Colors.grey,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    '${book.discountPercentage.toInt()}% off',
-                    style: const TextStyle(
-                      color: AppColors.success,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              // Offers
-              const Text(
-                'Available offers',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 8),
-              _OfferItem(
-                icon: Icons.local_offer,
-                text:
-                    'Bank Offer 5% Unlimited Cashback on Axis Bank Credit Card',
-              ),
-              _OfferItem(
-                icon: Icons.local_offer,
-                text:
-                    'Special Price Get extra 10% off (price inclusive of discount)',
-              ),
-              const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-              // Description
-              Text(
-                'Product Description',
-                style: AppTextStyles.h3.copyWith(color: Colors.grey.shade700),
-              ),
-              const SizedBox(height: 12),
-              isLoading
-                  ? const Center(
-                      child: Padding(
-                        padding: EdgeInsets.all(8.0),
-                        child: CircularProgressIndicator(),
+                  // Description
+                  Text(
+                    'Product Description',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.grey[400]
+                          : Colors.grey[700],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  isLoading
+                      ? const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(8.0),
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
+                      : Text(book.description, style: Theme.of(context).textTheme.bodyLarge),
+                  const SizedBox(height: 24),
+
+                  // Specs
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 150,
+                        child: Text('Author', style: TextStyle(color: Colors.grey)),
                       ),
-                    )
-                  : Text(description, style: AppTextStyles.bodyLarge),
-              const SizedBox(height: 24),
-
-              // Specs
-              Row(
-                children: [
-                  SizedBox(
-                    width: 150,
-                    child: Text('Author', style: TextStyle(color: Colors.grey)),
+                      Text(book.author, style: TextStyle(fontWeight: FontWeight.w500)),
+                    ],
                   ),
-                  Text(
-                    book.author,
-                    style: TextStyle(fontWeight: FontWeight.w500),
+                  const SizedBox(height: 8),
+                  // Mock specs
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 150,
+                        child: Text(
+                          'Language',
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ),
+                      Text('English', style: TextStyle(fontWeight: FontWeight.w500)),
+                    ],
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              // Mock specs
-              Row(
-                children: [
-                  SizedBox(
-                    width: 150,
-                    child: Text(
-                      'Language',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ),
-                  Text(
-                    'English',
-                    style: TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 48),
+        _SimilarBooksShelf(currentBook: book),
+        const SizedBox(height: 48),
+      ],
+    );
+  }
+}
+class _TrustMarker extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const _TrustMarker({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(8),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.05),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: AppColors.primary, size: 20),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+              Text(
+                subtitle,
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
               ),
             ],
           ),
@@ -322,7 +506,13 @@ class _MobileLayout extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Center(child: _buildBookImage(context, book.imageUrl, height: 300)),
+        Center(
+          child: BookImage(
+            imageUrl: book.imageUrl,
+            title: book.title,
+            height: 300,
+          ),
+        ),
         const SizedBox(height: 24),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -345,10 +535,31 @@ class _MobileLayout extends StatelessWidget {
         ),
         Text(book.author, style: AppTextStyles.bodyMedium),
         const SizedBox(height: 8),
+        const SizedBox(height: 8),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
           children: [
-            Text('₹${book.price}', style: AppTextStyles.h1),
+            Text('₹${book.price.toStringAsFixed(0)}', style: AppTextStyles.h1),
+            const SizedBox(width: 8),
+            Text(
+              '₹${book.originalPrice.toStringAsFixed(0)}',
+              style: const TextStyle(
+                decoration: TextDecoration.lineThrough,
+                color: Colors.grey,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '${book.effectiveDiscountPercentage.toInt()}% off',
+              style: const TextStyle(
+                color: AppColors.success,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+            const Spacer(),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
@@ -373,6 +584,31 @@ class _MobileLayout extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
+        // Trust Markers (Mobile)
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.grey[50],
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Column(
+            children: [
+              _TrustMarker(
+                icon: Icons.high_quality,
+                title: 'Quality Checked',
+                subtitle: 'Verified condition',
+              ),
+              const SizedBox(height: 12),
+              _TrustMarker(
+                icon: Icons.security,
+                title: 'Secure',
+                subtitle: '100% Safe Payments',
+              ),
+            ],
+          ),
+        ),
         const SizedBox(height: 16),
         isLoading
             ? const Center(
@@ -381,7 +617,10 @@ class _MobileLayout extends StatelessWidget {
                   child: CircularProgressIndicator(),
                 ),
               )
-            : Text(description, style: AppTextStyles.bodyLarge),
+            : Text(
+                book.description,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
         const SizedBox(height: 32),
         Row(
           children: [
@@ -433,52 +672,12 @@ class _MobileLayout extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 48),
+        _SimilarBooksShelf(currentBook: book),
+        const SizedBox(height: 24),
       ],
     );
   }
-}
-
-// Helper for displaying book image (Network or File)
-Widget _buildBookImage(
-  BuildContext context,
-  String imageUrl, {
-  double? height,
-}) {
-  if (imageUrl.startsWith('http') || imageUrl.startsWith('blob:') || kIsWeb) {
-    return Image.network(
-      imageUrl,
-      height: height,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) =>
-          _buildErrorImage(context, height),
-    );
-  } else if (imageUrl.isNotEmpty) {
-    return Image.file(
-      File(imageUrl),
-      height: height,
-      fit: BoxFit.contain,
-      errorBuilder: (context, error, stackTrace) =>
-          _buildErrorImage(context, height),
-    );
-  }
-  return _buildErrorImage(context, height);
-}
-
-Widget _buildErrorImage(BuildContext context, double? height) {
-  return Container(
-    height: height,
-    width: height != null ? height * 0.6 : null,
-    color: Theme.of(context).brightness == Brightness.dark
-        ? Colors.grey[800]
-        : Colors.grey[200],
-    child: Center(
-      child: Icon(
-        Icons.book,
-        size: 48,
-        color: Theme.of(context).iconTheme.color,
-      ),
-    ),
-  );
 }
 
 class _Breadcrumb extends StatelessWidget {
@@ -512,6 +711,100 @@ class _OfferItem extends StatelessWidget {
           Expanded(child: Text(text, style: const TextStyle(fontSize: 14))),
         ],
       ),
+    );
+  }
+}
+
+class _SimilarBooksShelf extends StatelessWidget {
+  final Book currentBook;
+
+  const _SimilarBooksShelf({required this.currentBook});
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer<MarketplaceProvider>(
+      builder: (context, marketplace, child) {
+        if (marketplace.isLoading) {
+          return const SizedBox(
+            height: 320,
+            child: Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        // Filter and sort listings
+        final List<Book> similarBooks = marketplace.recentListings.where((b) => b.id != currentBook.id).toList();
+
+        similarBooks.sort((a, b) {
+          int aScore = 0;
+          int bScore = 0;
+
+          // 1. Categories Match (weight: 2 per match)
+          for (var cat in a.categories) {
+            if (currentBook.categories.contains(cat)) aScore += 2;
+          }
+          for (var cat in b.categories) {
+            if (currentBook.categories.contains(cat)) bScore += 2;
+          }
+
+          // 2. Author Match (weight: 5)
+          if (a.author.toLowerCase() == currentBook.author.toLowerCase()) aScore += 5;
+          if (b.author.toLowerCase() == currentBook.author.toLowerCase()) bScore += 5;
+
+          // 3. Seller Match (weight: 2)
+          if (a.sellerName.toLowerCase() == currentBook.sellerName.toLowerCase()) aScore += 2;
+          if (b.sellerName.toLowerCase() == currentBook.sellerName.toLowerCase()) bScore += 2;
+
+          // 4. Title Keywords Match (weight: 1 per common word)
+          final currentWords = currentBook.title.toLowerCase().split(' ').where((w) => w.length > 3).toSet();
+          final aWords = a.title.toLowerCase().split(' ').where((w) => w.length > 3).toSet();
+          final bWords = b.title.toLowerCase().split(' ').where((w) => w.length > 3).toSet();
+          aScore += aWords.intersection(currentWords).length;
+          bScore += bWords.intersection(currentWords).length;
+
+          // 5. Price Similarity Match (weight: 2 if within 20% price range)
+          if (a.price > 0 && currentBook.price > 0) {
+            final diff = (a.price - currentBook.price).abs();
+            if (diff / currentBook.price <= 0.2) aScore += 2;
+          }
+          if (b.price > 0 && currentBook.price > 0) {
+            final diff = (b.price - currentBook.price).abs();
+            if (diff / currentBook.price <= 0.2) bScore += 2;
+          }
+
+          // Descending sort (highest score first)
+          return bScore.compareTo(aScore);
+        });
+
+        if (similarBooks.isEmpty) {
+          return const SizedBox.shrink();
+        }
+
+        final displayBooks = similarBooks.take(10).toList(); // Max 10 recommended
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Recommended for You',
+              style: AppTextStyles.h2,
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 420, // Increased height to completely prevent AspectRatio overflow
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: displayBooks.length,
+                itemBuilder: (context, index) {
+                  return SizedBox(
+                    width: 180, // Slightly reduced width for better mobile fit
+                    child: BookCard(book: displayBooks[index]),
+                  );
+                },
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

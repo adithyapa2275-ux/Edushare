@@ -11,6 +11,8 @@ class OverviewView extends StatelessWidget {
     final adminProvider = Provider.of<AdminProvider>(context);
     final totalUsers = adminProvider.allUsers.length;
     final totalListings = adminProvider.allListings.length;
+    final size = MediaQuery.of(context).size;
+    final isDesktop = size.width > 900;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(32),
@@ -19,7 +21,13 @@ class OverviewView extends StatelessWidget {
         children: [
           Text('System Statistics', style: AppTextStyles.h3),
           const SizedBox(height: 24),
-          Row(
+          GridView.count(
+            crossAxisCount: isDesktop ? 4 : (size.width > 600 ? 2 : 1),
+            crossAxisSpacing: 24,
+            mainAxisSpacing: 24,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            childAspectRatio: isDesktop ? 1.2 : 1.5,
             children: [
               _buildStatCard(
                 'Total Users',
@@ -27,18 +35,22 @@ class OverviewView extends StatelessWidget {
                 Icons.people,
                 Colors.blue,
               ),
-              const SizedBox(width: 24),
+              _buildStatCard(
+                'Active Sellers',
+                adminProvider.totalSellers.toString(),
+                Icons.store,
+                Colors.purple,
+              ),
               _buildStatCard(
                 'Marketplace Listings',
                 totalListings.toString(),
-                Icons.sell,
+                Icons.library_books,
                 Colors.green,
               ),
-              const SizedBox(width: 24),
               _buildStatCard(
-                'Platform Status',
-                'Active',
-                Icons.check_circle,
+                'Total Bookings',
+                adminProvider.allOrders.length.toString(),
+                Icons.shopping_bag,
                 Colors.orange,
               ),
             ],
@@ -49,9 +61,11 @@ class OverviewView extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).cardColor,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
+              border: Border.all(
+                color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
+              ),
             ),
             child: Column(
               children: [
@@ -80,31 +94,48 @@ class OverviewView extends StatelessWidget {
     IconData icon,
     Color color,
   ) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
+    return Builder(
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(
+              color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
             ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(icon, color: color, size: 32),
-            const SizedBox(height: 16),
-            Text(value, style: AppTextStyles.h1.copyWith(color: color)),
-            const SizedBox(height: 4),
-            Text(title, style: AppTextStyles.bodyMedium),
-          ],
-        ),
-      ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: color, size: 32),
+              const SizedBox(height: 16),
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  value,
+                  style: AppTextStyles.h1.copyWith(color: color, fontSize: 32),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                title,
+                style: AppTextStyles.bodyMedium,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

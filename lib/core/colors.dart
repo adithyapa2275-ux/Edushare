@@ -29,6 +29,11 @@ class AppColors {
   static const Color textSecondaryDark = Color(0xFFB0B0B0);
   static const Color dividerDark = Color(0xFF2C2C2C);
 
+  // Trust & Credibility Colors
+  static const Color assured = Color(0xFF2874F0); // Flipkart-style blue
+  static const Color verified = Color(0xFFFFD700); // Gold for verified badges
+  static const Color safe = Color(0xFF1B8E2D); // Green for safety markers
+
   // Gradients
   static const LinearGradient primaryGradient = LinearGradient(
     colors: [Color(0xFF2C3E50), Color(0xFF34495E)],

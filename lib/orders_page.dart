@@ -4,9 +4,23 @@ import 'providers/order_provider.dart';
 import 'core/colors.dart';
 import 'core/text_styles.dart';
 import 'widgets/custom_app_bar.dart';
+import 'widgets/book_image.dart';
 
-class OrdersPage extends StatelessWidget {
+class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
+
+  @override
+  State<OrdersPage> createState() => _OrdersPageState();
+}
+
+class _OrdersPageState extends State<OrdersPage> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<OrderProvider>(context, listen: false).fetchOrders();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +29,10 @@ class OrdersPage extends StatelessWidget {
       appBar: const CustomAppBar(),
       body: Consumer<OrderProvider>(
         builder: (context, orderProvider, child) {
+          if (orderProvider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
           if (orderProvider.orders.isEmpty) {
             return Center(
               child: Column(
@@ -87,11 +105,11 @@ class OrdersPage extends StatelessWidget {
                           padding: const EdgeInsets.only(bottom: 8.0),
                           child: Row(
                             children: [
-                              Image.network(
-                                entry.key.imageUrl,
+                              BookImage(
+                                imageUrl: entry.key.imageUrl,
+                                title: entry.key.title,
                                 width: 40,
                                 height: 60,
-                                fit: BoxFit.cover,
                               ),
                               const SizedBox(width: 12),
                               Expanded(

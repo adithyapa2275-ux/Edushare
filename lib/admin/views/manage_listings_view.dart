@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import '../../providers/admin_provider.dart';
 import '../../models/book.dart';
-import '../../core/colors.dart';
 
 class ManageListingsView extends StatelessWidget {
   const ManageListingsView({super.key});
@@ -52,8 +51,13 @@ class ManageListingsView extends StatelessWidget {
                       final book = listings[index];
                       return Card(
                         elevation: 0,
+                        color: Theme.of(context).cardColor,
                         shape: RoundedRectangleBorder(
-                          side: BorderSide(color: Colors.grey.shade200),
+                          side: BorderSide(
+                            color: Theme.of(
+                              context,
+                            ).dividerColor.withValues(alpha: 0.1),
+                          ),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -67,12 +71,19 @@ class ManageListingsView extends StatelessWidget {
                                 ),
                                 child: Container(
                                   width: double.infinity,
-                                  color: Colors.grey.shade100,
+                                  color:
+                                      Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.white.withValues(alpha: 0.05)
+                                      : Colors.grey.shade100,
                                   child: Image.network(
                                     book.imageUrl,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (c, e, s) =>
-                                        const Icon(Icons.book, size: 50),
+                                    errorBuilder: (c, e, s) => Icon(
+                                      Icons.book,
+                                      size: 50,
+                                      color: Theme.of(context).hintColor,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -86,8 +97,11 @@ class ManageListingsView extends StatelessWidget {
                                   children: [
                                     Text(
                                       book.title,
-                                      style: const TextStyle(
+                                      style: TextStyle(
                                         fontWeight: FontWeight.bold,
+                                        color: Theme.of(
+                                          context,
+                                        ).textTheme.bodyLarge?.color,
                                       ),
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
@@ -95,17 +109,19 @@ class ManageListingsView extends StatelessWidget {
                                     const SizedBox(height: 4),
                                     Row(
                                       children: [
-                                        const Icon(
+                                        Icon(
                                           Icons.person_outline,
                                           size: 12,
-                                          color: Colors.grey,
+                                          color: Theme.of(context).hintColor,
                                         ),
                                         const SizedBox(width: 4),
                                         Expanded(
                                           child: Text(
                                             book.sellerName,
                                             style: TextStyle(
-                                              color: Colors.grey.shade600,
+                                              color: Theme.of(
+                                                context,
+                                              ).hintColor,
                                               fontSize: 11,
                                             ),
                                             maxLines: 1,
@@ -117,16 +133,18 @@ class ManageListingsView extends StatelessWidget {
                                     if (book.uploadedAt != null)
                                       Row(
                                         children: [
-                                          const Icon(
+                                          Icon(
                                             Icons.calendar_today_outlined,
                                             size: 12,
-                                            color: Colors.grey,
+                                            color: Theme.of(context).hintColor,
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
                                             _formatDate(book.uploadedAt!),
                                             style: TextStyle(
-                                              color: Colors.grey.shade600,
+                                              color: Theme.of(
+                                                context,
+                                              ).hintColor,
                                               fontSize: 11,
                                             ),
                                           ),
@@ -139,15 +157,19 @@ class ManageListingsView extends StatelessWidget {
                                       children: [
                                         Text(
                                           '₹${book.price.toStringAsFixed(0)}',
-                                          style: const TextStyle(
-                                            color: AppColors.primary,
+                                          style: TextStyle(
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                         IconButton(
-                                          icon: const Icon(
+                                          icon: Icon(
                                             Icons.info_outline,
-                                            color: AppColors.primary,
+                                            color: Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
                                             size: 20,
                                           ),
                                           onPressed: () =>

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/book.dart';
@@ -11,66 +12,151 @@ class AdminProvider extends ChangeNotifier {
   List<Book> _allListings = [];
   List<Book> get allListings => _allListings;
 
+  List<Map<String, dynamic>> _allOrders = [];
+  List<Map<String, dynamic>> get allOrders => _allOrders;
+
   bool _isLoadingUsers = false;
   bool get isLoadingUsers => _isLoadingUsers;
 
   bool _isLoadingListings = false;
   bool get isLoadingListings => _isLoadingListings;
 
-  Future<void> fetchAllUsers() async {
+  bool _isLoadingOrders = false;
+  bool get isLoadingOrders => _isLoadingOrders;
+
+  StreamSubscription? _usersSub;
+  StreamSubscription? _listingsSub;
+  StreamSubscription? _ordersSub;
+
+  AdminProvider() {
+    _initListeners();
+  }
+
+  void _initListeners() {
+    _startUsersListener();
+    _startListingsListener();
+    _startOrdersListener();
+  }
+
+  void _startUsersListener() {
     _isLoadingUsers = true;
-    notifyListeners();
-
-    try {
-      final snapshot = await _db.collection('users').get();
-      _allUsers = snapshot.docs.map((doc) {
-        var data = doc.data();
-        data['uid'] = doc.id; // Inject ID for updates
-        return data;
-      }).toList();
-    } catch (e) {
-      print('AdminProvider: Error fetching users: $e');
-    } finally {
-      _isLoadingUsers = false;
-      notifyListeners();
-    }
+    _usersSub?.cancel();
+    _usersSub = _db
+        .collection('users')
+        .snapshots()
+        .listen(
+          (snapshot) {
+            debugPrint(
+              '🔥 [ADMIN] Users Snapshot received: ${snapshot.docs.length} documents',
+            );
+            List<Map<String, dynamic>> users = [];
+            for (var doc in snapshot.docs) {
+              try {
+                var data = doc.data();
+                data['uid'] = doc.id;
+                users.add(data);
+              } catch (e) {
+                debugPrint('⚠️ Error parsing user ${doc.id}: $e');
+              }
+            }
+            _allUsers = users;
+            _isLoadingUsers = false;
+            notifyListeners();
+          },
+          onError: (e) {
+            debugPrint('AdminProvider: Users Stream Error: $e');
+            _isLoadingUsers = false;
+            notifyListeners();
+          },
+        );
   }
 
-  Future<void> fetchAllListings() async {
+  void _startListingsListener() {
     _isLoadingListings = true;
-    notifyListeners();
+    _listingsSub?.cancel();
+    _listingsSub = _db
+        .collection('listings')
+        .snapshots()
+        .listen(
+          (snapshot) {
+            debugPrint(
+              '🔥 [ADMIN] Listings Snapshot received: ${snapshot.docs.length} documents',
+            );
+            List<Book> listings = [];
+            for (var doc in snapshot.docs) {
+              try {
+                listings.add(Book.fromMap(doc.data(), doc.id));
+              } catch (e) {
+                debugPrint('⚠️ Error parsing listing ${doc.id}: $e');
+              }
+            }
+            _allListings = listings;
 
-    try {
-      final snapshot = await _db
-          .collection('listings')
-          .orderBy('timestamp', descending: true)
-          .get();
+            // Local sort by timestamp if available
+            _allListings.sort((a, b) {
+              if (a.uploadedAt == null && b.uploadedAt == null) return 0;
+              if (a.uploadedAt == null) return 1;
+              if (b.uploadedAt == null) return -1;
+              return b.uploadedAt!.compareTo(a.uploadedAt!);
+            });
 
-      _allListings = snapshot.docs
-          .map((doc) => Book.fromMap(doc.data(), doc.id))
-          .toList();
-    } catch (e) {
-      print('AdminProvider: Error fetching listings: $e');
-    } finally {
-      _isLoadingListings = false;
-      notifyListeners();
-    }
+            _isLoadingListings = false;
+            notifyListeners();
+          },
+          onError: (e) {
+            debugPrint('AdminProvider: Listings Stream Error: $e');
+            _isLoadingListings = false;
+            notifyListeners();
+          },
+        );
   }
+
+  void _startOrdersListener() {
+    _isLoadingOrders = true;
+    _ordersSub?.cancel();
+    _ordersSub = _db
+        .collection('orders')
+        .snapshots()
+        .listen(
+          (snapshot) {
+            debugPrint(
+              '🔥 [ADMIN] Orders Snapshot received: ${snapshot.docs.length} documents',
+            );
+            List<Map<String, dynamic>> orders = [];
+            for (var doc in snapshot.docs) {
+              try {
+                var data = doc.data();
+                data['orderId'] = doc.id;
+                orders.add(data);
+              } catch (e) {
+                debugPrint('Error parsing order ${doc.id}: $e');
+              }
+            }
+            _allOrders = orders;
+            _isLoadingOrders = false;
+            notifyListeners();
+          },
+          onError: (e) {
+            debugPrint('AdminProvider: Orders Stream Error: $e');
+            _isLoadingOrders = false;
+            notifyListeners();
+          },
+        );
+  }
+
+  // Keep these as manual refresh triggers if needed, but they just restart listeners
+  Future<void> fetchAllUsers() async => _startUsersListener();
+  Future<void> fetchAllListings() async => _startListingsListener();
+  Future<void> fetchAllOrders() async => _startOrdersListener();
 
   Future<bool> toggleUserAdminStatus(String uid, bool currentStatus) async {
     try {
       await _db.collection('users').doc(uid).update({
         'isAdmin': !currentStatus,
       });
-      // Update local state to avoid refetching everything immediately
-      final index = _allUsers.indexWhere((u) => u['uid'] == uid);
-      if (index != -1) {
-        _allUsers[index]['isAdmin'] = !currentStatus;
-        notifyListeners();
-      }
       return true;
     } catch (e) {
-      print('AdminProvider: Error toggling admin status: $e');
+      debugPrint('AdminProvider: Error toggling admin status: $e');
       return false;
     }
   }
@@ -78,12 +164,23 @@ class AdminProvider extends ChangeNotifier {
   Future<bool> deleteListing(String listingId) async {
     try {
       await _db.collection('listings').doc(listingId).delete();
-      _allListings.removeWhere((book) => book.id == listingId);
-      notifyListeners();
       return true;
     } catch (e) {
-      print('AdminProvider: Error deleting listing: $e');
+      debugPrint('AdminProvider: Error deleting listing: $e');
       return false;
     }
+  }
+
+  int get totalSellers {
+    final sellers = _allListings.map((b) => b.uploaderId).toSet();
+    return sellers.length;
+  }
+
+  @override
+  void dispose() {
+    _usersSub?.cancel();
+    _listingsSub?.cancel();
+    _ordersSub?.cancel();
+    super.dispose();
   }
 }
