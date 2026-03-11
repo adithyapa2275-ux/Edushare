@@ -118,6 +118,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               items: Map.from(widget.items),
               totalAmount: _totalPrice,
               deliveryAddress: "$_name, $_address\n$_phone",
+              paymentMethod: _paymentMethod,
             );
 
             try {
@@ -304,88 +305,89 @@ class _CheckoutPageState extends State<CheckoutPage> {
             title: const Text('Payment Options'),
             content: Column(
               children: [
-                RadioGroup<String>(
-                  groupValue: _paymentMethod,
-                  onChanged: (val) =>
-                      setState(() => _paymentMethod = val.toString()),
-                  child: Column(
-                    children: [
-                      RadioListTile(
-                        value: 'upi',
-                        title: const Text("UPI"),
-                        subtitle: const Text("Google Pay, PhonePe, Paytm"),
-                      ),
-                      if (_paymentMethod == 'upi')
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            left: 16,
-                            right: 16,
-                            bottom: 8,
+                Column(
+                  children: [
+                    RadioListTile<String>(
+                      value: 'upi',
+                      groupValue: _paymentMethod,
+                      onChanged: (val) => setState(() => _paymentMethod = val!),
+                      title: const Text("UPI"),
+                      subtitle: const Text("Google Pay, PhonePe, Paytm"),
+                    ),
+                    if (_paymentMethod == 'upi')
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          left: 16,
+                          right: 16,
+                          bottom: 8,
+                        ),
+                        child: TextField(
+                          decoration: const InputDecoration(
+                            labelText: 'Enter UPI ID',
+                            border: OutlineInputBorder(),
+                            isDense: true,
                           ),
-                          child: TextField(
-                            decoration: const InputDecoration(
-                              labelText: 'Enter UPI ID',
-                              border: OutlineInputBorder(),
-                              isDense: true,
+                        ),
+                      ),
+                    RadioListTile<String>(
+                      value: 'card',
+                      groupValue: _paymentMethod,
+                      onChanged: (val) => setState(() => _paymentMethod = val!),
+                      title: const Text("Credit / Debit / ATM Card"),
+                    ),
+                    if (_paymentMethod == 'card')
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          left: 16,
+                          right: 16,
+                          bottom: 8,
+                        ),
+                        child: Column(
+                          children: [
+                            TextField(
+                              decoration: const InputDecoration(
+                                labelText: 'Card Number',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                              keyboardType: TextInputType.number,
                             ),
-                          ),
-                        ),
-                      RadioListTile(
-                        value: 'card',
-                        title: const Text("Credit / Debit / ATM Card"),
-                      ),
-                      if (_paymentMethod == 'card')
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            left: 16,
-                            right: 16,
-                            bottom: 8,
-                          ),
-                          child: Column(
-                            children: [
-                              TextField(
-                                decoration: const InputDecoration(
-                                  labelText: 'Card Number',
-                                  border: OutlineInputBorder(),
-                                  isDense: true,
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    decoration: const InputDecoration(
+                                      labelText: 'Expiry Date (MM/YY)',
+                                      border: OutlineInputBorder(),
+                                      isDense: true,
+                                    ),
+                                  ),
                                 ),
-                                keyboardType: TextInputType.number,
-                              ),
-                              const SizedBox(height: 8),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextField(
-                                      decoration: const InputDecoration(
-                                        labelText: 'Expiry Date (MM/YY)',
-                                        border: OutlineInputBorder(),
-                                        isDense: true,
-                                      ),
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: TextField(
+                                    decoration: const InputDecoration(
+                                      labelText: 'CVV',
+                                      border: OutlineInputBorder(),
+                                      isDense: true,
                                     ),
+                                    obscureText: true,
+                                    keyboardType: TextInputType.number,
                                   ),
-                                  const SizedBox(width: 16),
-                                  Expanded(
-                                    child: TextField(
-                                      decoration: const InputDecoration(
-                                        labelText: 'CVV',
-                                        border: OutlineInputBorder(),
-                                        isDense: true,
-                                      ),
-                                      obscureText: true,
-                                      keyboardType: TextInputType.number,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                      RadioListTile(
-                        value: 'cod',
-                        title: const Text("Cash on Delivery"),
                       ),
-                    ],
-                  ),
+                    RadioListTile<String>(
+                      value: 'cod',
+                      groupValue: _paymentMethod,
+                      onChanged: (val) => setState(() => _paymentMethod = val!),
+                      title: const Text("Cash on Delivery"),
+                    ),
+                  ],
                 ),
               ],
             ),

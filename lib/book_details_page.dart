@@ -94,6 +94,7 @@ class _DesktopLayout extends StatelessWidget {
                               context,
                               listen: false,
                             ).addToCart(book);
+                            ScaffoldMessenger.of(context).clearSnackBars();
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(
                                 content: Text('${book.title} added to cart!'),
@@ -631,6 +632,7 @@ class _MobileLayout extends StatelessWidget {
                     context,
                     listen: false,
                   ).addToCart(book);
+                  ScaffoldMessenger.of(context).clearSnackBars();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('${book.title} added to cart!'),

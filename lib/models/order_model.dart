@@ -8,6 +8,7 @@ class OrderModel {
   final Map<Book, int> items;
   final double totalAmount;
   final String deliveryAddress;
+  final String paymentMethod;
   final String status;
 
   OrderModel({
@@ -17,6 +18,7 @@ class OrderModel {
     required this.items,
     required this.totalAmount,
     required this.deliveryAddress,
+    required this.paymentMethod,
     this.status = 'placed',
   });
 
@@ -31,6 +33,7 @@ class OrderModel {
       }).toList(),
       'totalAmount': totalAmount,
       'deliveryAddress': deliveryAddress,
+      'paymentMethod': paymentMethod,
       'status': status,
     };
   }
@@ -60,6 +63,7 @@ class OrderModel {
       items: parsedItems,
       totalAmount: (map['totalAmount'] ?? 0).toDouble(),
       deliveryAddress: map['deliveryAddress'] ?? '',
+      paymentMethod: map['paymentMethod'] ?? 'upi',
       status: map['status'] ?? 'placed',
     );
   }
