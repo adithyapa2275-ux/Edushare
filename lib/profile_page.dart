@@ -147,54 +147,57 @@ class _ProfilePageState extends State<ProfilePage> {
                         // Avatar
                         Stack(
                           children: [
-                            CircleAvatar(
-                              radius: 60,
-                              backgroundColor: Theme.of(
-                                context,
-                              ).primaryColor.withValues(alpha: 0.1),
-                              backgroundImage: user.profileImage.isNotEmpty
-                                  ? (user.profileImage.startsWith('http')
-                                        ? NetworkImage(user.profileImage)
-                                        : (kIsWeb
-                                              ? null
-                                              : FileImage(
-                                                      File(user.profileImage),
-                                                    )
-                                                    as ImageProvider))
-                                  : null,
-                              child:
-                                  user.profileImage.isEmpty ||
-                                      (kIsWeb &&
-                                          !user.profileImage.startsWith('http'))
-                                  ? Text(
-                                      user.name.isNotEmpty
-                                          ? user.name[0].toUpperCase()
-                                          : 'U',
-                                      style: TextStyle(
-                                        fontSize: 48,
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).primaryColor,
-                                      ),
-                                    )
-                                  : null,
+                            InkWell(
+                              onTap: _pickImage,
+                              borderRadius: BorderRadius.circular(60),
+                              child: CircleAvatar(
+                                radius: 60,
+                                backgroundColor: Theme.of(
+                                  context,
+                                ).primaryColor.withValues(alpha: 0.1),
+                                backgroundImage: user.profileImage.isNotEmpty
+                                    ? (user.profileImage.startsWith('http')
+                                          ? NetworkImage(user.profileImage)
+                                          : (kIsWeb
+                                                ? null
+                                                : FileImage(
+                                                        File(user.profileImage),
+                                                      )
+                                                      as ImageProvider))
+                                    : null,
+                                child:
+                                    user.profileImage.isEmpty ||
+                                        (kIsWeb &&
+                                            !user.profileImage.startsWith('http'))
+                                    ? Text(
+                                        user.name.isNotEmpty
+                                            ? user.name[0].toUpperCase()
+                                            : 'U',
+                                        style: TextStyle(
+                                          fontSize: 48,
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context).primaryColor,
+                                        ),
+                                      )
+                                    : null,
+                              ),
                             ),
-                            if (_isEditing)
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: CircleAvatar(
-                                  radius: 20,
-                                  backgroundColor: AppColors.primary,
-                                  child: IconButton(
-                                    icon: const Icon(
-                                      Icons.camera_alt,
-                                      size: 20,
-                                      color: Colors.white,
-                                    ),
-                                    onPressed: _pickImage,
+                            Positioned(
+                              bottom: 0,
+                              right: 0,
+                              child: CircleAvatar(
+                                radius: 20,
+                                backgroundColor: AppColors.primary,
+                                child: IconButton(
+                                  icon: const Icon(
+                                    Icons.camera_alt,
+                                    size: 20,
+                                    color: Colors.white,
                                   ),
+                                  onPressed: _pickImage,
                                 ),
                               ),
+                            ),
                           ],
                         ),
                         const SizedBox(height: 24),

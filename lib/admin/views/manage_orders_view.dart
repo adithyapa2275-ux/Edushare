@@ -65,6 +65,7 @@ class ManageOrdersView extends StatelessWidget {
                 contentPadding: const EdgeInsets.all(16),
                 title: Text('Order #${orderId.toString().length > 6 ? orderId.toString().substring(orderId.toString().length - 6) : orderId}', style: AppTextStyles.h3),
                 subtitle: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 8),
@@ -78,6 +79,7 @@ class ManageOrdersView extends StatelessWidget {
                   ],
                 ),
                 trailing: Column(
+                  mainAxisSize: MainAxisSize.min,
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Container(
