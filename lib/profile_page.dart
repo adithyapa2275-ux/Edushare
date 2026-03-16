@@ -245,6 +245,15 @@ class _ProfilePageState extends State<ProfilePage> {
                           _phoneController,
                           Icons.phone,
                           enabled: _isEditing,
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Please enter a valid 10-digit phone number.';
+                            }
+                            if (!RegExp(r'^\d{10}$').hasMatch(value)) {
+                              return 'Please enter a valid 10-digit phone number.';
+                            }
+                            return null;
+                          },
                         ),
                         const SizedBox(height: 16),
                         _buildTextField(
@@ -343,6 +352,7 @@ class _ProfilePageState extends State<ProfilePage> {
     IconData icon, {
     bool enabled = true,
     int maxLines = 1,
+    String? Function(String?)? validator,
   }) {
     return TextFormField(
       controller: controller,
@@ -356,10 +366,13 @@ class _ProfilePageState extends State<ProfilePage> {
         fillColor: enabled
             ? null
             : (Theme.of(context).brightness == Brightness.dark
-                  ? Colors.grey[800]
-                  : Colors.grey[100]),
+                ? Colors.grey[800]
+                : Colors.grey[100]),
       ),
-      validator: (value) => value!.isEmpty ? 'Please enter $label' : null,
+      validator: validator ??
+          (value) => value == null || value.trim().isEmpty
+              ? 'Please enter $label'
+              : null,
     );
   }
 }

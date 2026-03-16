@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:provider/provider.dart';
+import 'providers/cart_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -110,6 +112,10 @@ class _LoginPageState extends State<LoginPage>
       }
 
       if (!mounted) return;
+
+      // Explicitly load cart now so Firestore data is ready immediately
+      // (backs up the authStateChanges listener in CartProvider)
+      Provider.of<CartProvider>(context, listen: false).loadCart();
 
       if (email == 'admin@edushare.com') {
         context.go('/admin');

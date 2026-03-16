@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'widgets/book_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'providers/user_provider.dart';
 
 class CheckoutPage extends StatefulWidget {
   final Map<Book, int> items;
@@ -24,9 +25,23 @@ class _CheckoutPageState extends State<CheckoutPage> {
   String _paymentMethod = 'upi';
 
   // Address State
-  String _name = "Adithya";
-  String _address = "123, Flutter Street, Code City, 560001\nKarnataka, India";
-  String _phone = "+91 9876543210";
+  String _name = "";
+  String _address = "";
+  String _phone = "";
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final user = Provider.of<UserProvider>(context, listen: false);
+      setState(() {
+        _name = user.name == 'User' ? '' : user.name;
+        _address = user.address;
+        _phone = user.phone;
+      });
+    });
+  }
 
   double get _totalPrice {
     double total = 0;
@@ -73,6 +88,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
           ),
           ElevatedButton(
             onPressed: () {
+              if (!RegExp(r'^\d{10}$').hasMatch(phoneController.text.trim())) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Please enter a valid 10-digit phone number.'),
+                    backgroundColor: Colors.red,
+                  ),
+                );
+                return;
+              }
               setState(() {
                 _name = nameController.text;
                 _address = addressController.text;
@@ -105,6 +129,27 @@ class _CheckoutPageState extends State<CheckoutPage> {
           });
         },
         onStepContinue: () async {
+          if (_currentStep == 0) {
+            if (_name.trim().isEmpty || _address.trim().isEmpty || _phone.trim().isEmpty) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please provide your complete delivery address'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+            if (!RegExp(r'^\d{10}$').hasMatch(_phone.trim())) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Please enter a valid 10-digit phone number.'),
+                  backgroundColor: Colors.red,
+                ),
+              );
+              return;
+            }
+          }
+
           if (_currentStep < 2) {
             setState(() {
               _currentStep += 1;
@@ -129,7 +174,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
               
               await FirebaseFirestore.instance.collection('orders').add(orderData);
 
-              if (!mounted) return;
+              if (!context.mounted) return;
 
               // 2. Save to local OrderProvider for immediate UI update
               Provider.of<OrderProvider>(
@@ -141,21 +186,18 @@ class _CheckoutPageState extends State<CheckoutPage> {
               final cart = Provider.of<CartProvider>(context, listen: false);
               cart.clearCart();
 
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Order Placed Successfully!')),
-                );
-                context.go('/orders'); // Redirect to Orders page
-              }
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Order Placed Successfully!')),
+              );
+              context.go('/orders'); // Redirect to Orders page
             } catch (e) {
-              if (mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Failed to place order: $e'),
-                    backgroundColor: Colors.red,
-                  ),
-                );
-              }
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Failed to place order: $e'),
+                  backgroundColor: Colors.red,
+                ),
+              );
             }
           }
         },
@@ -195,7 +237,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
         steps: [
           Step(
             title: const Text('Delivery Address'),
-            subtitle: Text('$_name, $_address'),
+            subtitle: Text(_address.isEmpty ? 'Address Required' : '$_name, $_address'),
             content: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(12),
@@ -210,25 +252,30 @@ class _CheckoutPageState extends State<CheckoutPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    _name,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(_address),
-                  const SizedBox(height: 8),
-                  Text(
-                    _phone,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
+                  if (_name.isNotEmpty || _address.isNotEmpty || _phone.isNotEmpty) ...[
+                    Text(
+                      _name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(_address),
+                    const SizedBox(height: 8),
+                    Text(
+                      _phone,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 12),
+                  ] else ...[
+                    const Text('No delivery address specified. Please add one.'),
+                    const SizedBox(height: 12),
+                  ],
                   ElevatedButton(
                     onPressed: _showEditAddressDialog,
                     style: ElevatedButton.styleFrom(
                       minimumSize: const Size(0, 32),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                     ),
-                    child: const Text("Change"),
+                    child: Text(_address.isEmpty ? "Add Address" : "Change"),
                   ),
                 ],
               ),
@@ -307,12 +354,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
               children: [
                 Column(
                   children: [
-                    RadioListTile<String>(
+                    RadioMenuButton<String>(
                       value: 'upi',
                       groupValue: _paymentMethod,
                       onChanged: (val) => setState(() => _paymentMethod = val!),
-                      title: const Text("UPI"),
-                      subtitle: const Text("Google Pay, PhonePe, Paytm"),
+                      child: const Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("UPI"),
+                          Text(
+                            "Google Pay, PhonePe, Paytm",
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
                     ),
                     if (_paymentMethod == 'upi')
                       Padding(
@@ -329,11 +384,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           ),
                         ),
                       ),
-                    RadioListTile<String>(
+                    RadioMenuButton<String>(
                       value: 'card',
                       groupValue: _paymentMethod,
                       onChanged: (val) => setState(() => _paymentMethod = val!),
-                      title: const Text("Credit / Debit / ATM Card"),
+                      child: const Text("Credit / Debit / ATM Card"),
                     ),
                     if (_paymentMethod == 'card')
                       Padding(
@@ -381,11 +436,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                           ],
                         ),
                       ),
-                    RadioListTile<String>(
+                    RadioMenuButton<String>(
                       value: 'cod',
                       groupValue: _paymentMethod,
                       onChanged: (val) => setState(() => _paymentMethod = val!),
-                      title: const Text("Cash on Delivery"),
+                      child: const Text("Cash on Delivery"),
                     ),
                   ],
                 ),

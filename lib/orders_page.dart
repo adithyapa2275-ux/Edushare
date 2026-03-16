@@ -3,8 +3,8 @@ import 'package:provider/provider.dart';
 import 'providers/order_provider.dart';
 import 'core/colors.dart';
 import 'core/text_styles.dart';
-import 'widgets/custom_app_bar.dart';
 import 'widgets/book_image.dart';
+import 'package:go_router/go_router.dart';
 
 class OrdersPage extends StatefulWidget {
   const OrdersPage({super.key});
@@ -12,7 +12,6 @@ class OrdersPage extends StatefulWidget {
   @override
   State<OrdersPage> createState() => _OrdersPageState();
 }
-
 class _OrdersPageState extends State<OrdersPage> {
   @override
   void initState() {
@@ -21,12 +20,17 @@ class _OrdersPageState extends State<OrdersPage> {
       Provider.of<OrderProvider>(context, listen: false).fetchOrders();
     });
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: const CustomAppBar(),
+      appBar: AppBar(
+        title: const Text('My Orders'),
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
+        foregroundColor: Theme.of(context).appBarTheme.iconTheme?.color,
+        elevation: 1,
+        shadowColor: Colors.black12,
+      ),
       body: Consumer<OrderProvider>(
         builder: (context, orderProvider, child) {
           if (orderProvider.isLoading) {
@@ -50,123 +54,158 @@ class _OrdersPageState extends State<OrdersPage> {
                     "Your purchased books will appear here.",
                     style: AppTextStyles.bodyMedium,
                   ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.secondary,
+                    ),
+                    child: const Text('Start Shopping'),
+                  )
                 ],
               ),
             );
           }
 
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: orderProvider.orders.length,
-            itemBuilder: (context, index) {
-              final order = orderProvider.orders[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 16),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            "Order #${order.id.substring(order.id.length - 6)}",
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.success.withValues(alpha: 0.1),
+          // Flatten orders into individual items
+          List<Map<String, dynamic>> flatItems = [];
+          for (var order in orderProvider.orders) {
+            for (var entry in order.items.entries) {
+              flatItems.add({
+                'order': order,
+                'book': entry.key,
+                'quantity': entry.value,
+              });
+            }
+          }
+
+          return Column(
+            children: [
+              // Orders List
+              Expanded(
+                child: ListView.separated(
+                  itemCount: flatItems.length,
+                  separatorBuilder: (context, index) => const Divider(height: 1, thickness: 1),
+                  itemBuilder: (context, index) {
+                    final item = flatItems[index];
+                    final order = item['order'];
+                    final book = item['book'];
+                    
+                    // Simple logic to interpret status display
+                    String displayStatusText;
+                    if (order.status.toLowerCase() == 'placed' || order.status.toLowerCase() == 'processing') {
+                      displayStatusText = 'Placed on ${_formatDate(order.date)}';
+                    } else if (order.status.toLowerCase() == 'delivered') {
+                      displayStatusText = 'Delivered on ${_formatDate(order.date.add(const Duration(days: 4)))}';
+                    } else if (order.status.toLowerCase().contains('replacement')) {
+                       displayStatusText = 'Replacement completed';
+                    } else {
+                      displayStatusText = '${order.status} on ${_formatDate(order.date)}';
+                    }
+
+                    return InkWell(
+                      onTap: () {
+                        // Navigate to specific Book Details
+                        context.push('/book', extra: book);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        color: Theme.of(context).cardColor,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Book Image
+                            ClipRRect(
                               borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: const Text(
-                              "Placed",
-                              style: TextStyle(
-                                color: AppColors.success,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
+                              child: BookImage(
+                                imageUrl: book.imageUrl,
+                                title: book.title,
+                                width: 60,
+                                height: 85,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Date: ${order.date.toString().split('.')[0]}",
-                        style: AppTextStyles.bodySmall,
-                      ),
-                      const Divider(height: 24),
-                      ...order.items.entries.map(
-                        (entry) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8.0),
-                          child: Row(
-                            children: [
-                              BookImage(
-                                imageUrl: entry.key.imageUrl,
-                                title: entry.key.title,
-                                width: 40,
-                                height: 60,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      entry.key.title,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w500,
+                            const SizedBox(width: 16),
+                            // Details
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Expanded(
+                                        child: Text(
+                                          displayStatusText,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    book.title,
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: Colors.grey.shade700,
+                                      fontSize: 14,
                                     ),
-                                    Text(
-                                      "Qty: ${entry.value}",
-                                      style: AppTextStyles.bodySmall,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 12),
+                                  
+                                  // Rating Stars Placeholder
+                                  Row(
+                                    children: List.generate(
+                                      5,
+                                      (index) => Icon(
+                                        Icons.star_border,
+                                        size: 20,
+                                        color: Colors.grey.shade400,
+                                      ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    "Rate this product now",
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                "₹${(entry.key.price * entry.value).toStringAsFixed(2)}",
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            ),
+                            const SizedBox(width: 8),
+                            // Chevron
+                            const Padding(
+                              padding: EdgeInsets.only(top: 24.0),
+                              child: Icon(
+                                Icons.chevron_right,
+                                color: Colors.grey,
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
                       ),
-                      const Divider(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text("Total Amount"),
-                          Text(
-                            "₹${order.totalAmount.toStringAsFixed(2)}",
-                            style: AppTextStyles.h2.copyWith(fontSize: 16),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Delivered to: ${order.deliveryAddress.split(',')[0]} (Edit to see full)",
-                        style: AppTextStyles.bodySmall.copyWith(
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
-              );
-            },
+              ),
+            ],
           );
         },
       ),
     );
   }
+  
+  String _formatDate(DateTime date) {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    return '${months[date.month - 1]} ${date.day}, ${date.year}';
+  }
 }
+

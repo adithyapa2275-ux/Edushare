@@ -61,58 +61,71 @@ class ManageOrdersView extends StatelessWidget {
             return Card(
               margin: const EdgeInsets.only(bottom: 16),
               elevation: 2,
-              child: ListTile(
-                contentPadding: const EdgeInsets.all(16),
-                title: Text('Order #${orderId.toString().length > 6 ? orderId.toString().substring(orderId.toString().length - 6) : orderId}', style: AppTextStyles.h3),
-                subtitle: Column(
-                  mainAxisSize: MainAxisSize.min,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const SizedBox(height: 8),
-                    Text('Customer: $customerName'),
-                    Text('Address: $address'),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Total: ₹${totalAmount.toStringAsFixed(2)}',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-                trailing: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: statusColor.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: statusColor.withValues(alpha: 0.5)),
-                      ),
-                      child: Text(
-                        status.toUpperCase(),
-                        style: TextStyle(
-                          color: statusColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                    // Left: order info
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Order #${orderId.toString().length > 6 ? orderId.toString().substring(orderId.toString().length - 6) : orderId}',
+                            style: AppTextStyles.h3,
+                          ),
+                          const SizedBox(height: 8),
+                          Text('Customer: $customerName'),
+                          Text('Address: $address'),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Total: ₹${totalAmount.toStringAsFixed(2)}',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    InkWell(
-                      onTap: () => _updateOrderStatus(context, orderId, status),
-                      child: const Text(
-                        'Update Status',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          decoration: TextDecoration.underline,
+                    const SizedBox(width: 16),
+                    // Right: status badge + update button
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: statusColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: statusColor.withValues(alpha: 0.5)),
+                          ),
+                          child: Text(
+                            status.toUpperCase(),
+                            style: TextStyle(
+                              color: statusColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        InkWell(
+                          onTap: () => _updateOrderStatus(context, orderId, status),
+                          child: const Text(
+                            'Update Status',
+                            style: TextStyle(
+                              color: AppColors.primary,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
             );
+
           },
         );
       },

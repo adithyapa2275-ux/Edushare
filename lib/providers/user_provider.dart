@@ -115,7 +115,9 @@ class UserProvider extends ChangeNotifier {
   Future<void> _clearLocalCache() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
+      await prefs.remove('user_name');
+      await prefs.remove('user_profile_image');
+      await prefs.remove('user_email');
     } catch (e) {
       debugPrint('UserProvider: Error clearing cache: $e');
     }

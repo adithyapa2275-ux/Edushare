@@ -37,7 +37,7 @@ class CartPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => context.go('/home'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.secondary,
                       padding: const EdgeInsets.symmetric(

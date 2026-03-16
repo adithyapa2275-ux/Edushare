@@ -92,9 +92,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                       // Sign out from Firebase
                       await FirebaseAuth.instance.signOut();
 
-                      if (!mounted) return;
-                      // Navigate to Login
-                      context.go('/login');
+                      if (context.mounted) {
+                        // Navigate to Login
+                        context.go('/login');
+                      }
                     },
                   ),
                 ),

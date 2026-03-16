@@ -19,6 +19,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
 
   bool _isLoading = false;
 
@@ -48,7 +49,7 @@ class _RegisterPageState extends State<RegisterPage> {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
           'name': _nameController.text.trim(),
           'email': _emailController.text.trim(),
-          'phone': '', // Default empty, user can update later
+          'phone': _phoneController.text.trim(),
           'address': '', // Default empty
           'profileImage': '', // Default empty
           'role': 'student', // Default role
@@ -98,6 +99,7 @@ class _RegisterPageState extends State<RegisterPage> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     _nameController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -217,6 +219,22 @@ class _RegisterPageState extends State<RegisterPage> {
                                   if (!value.contains('@') ||
                                       !value.contains('.')) {
                                     return 'Please enter a valid email';
+                                  }
+                                  return null;
+                                },
+                              ),
+                              const SizedBox(height: 16),
+                              _buildTextField(
+                                controller: _phoneController,
+                                icon: Icons.phone_outlined,
+                                hintText: "Phone Number",
+                                obscureText: false,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Please enter a valid 10-digit phone number.';
+                                  }
+                                  if (!RegExp(r'^\d{10}$').hasMatch(value)) {
+                                    return 'Please enter a valid 10-digit phone number.';
                                   }
                                   return null;
                                 },

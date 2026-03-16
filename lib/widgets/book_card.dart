@@ -19,6 +19,23 @@ class BookCard extends StatefulWidget {
 class _BookCardState extends State<BookCard> {
   bool _isHovered = false;
 
+  void _showCartToast(BuildContext context, String title) {
+    final overlay = Overlay.of(context);
+    late OverlayEntry entry;
+    entry = OverlayEntry(
+      builder: (_) => _CartToast(
+        title: title,
+        onDone: () => entry.remove(),
+        onViewCart: () {
+          entry.remove();
+          context.push('/cart');
+        },
+      ),
+    );
+    overlay.insert(entry);
+  }
+
+
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
@@ -220,19 +237,7 @@ class _BookCardState extends State<BookCard> {
                               context,
                               listen: false,
                             ).addToCart(widget.book);
-                            ScaffoldMessenger.of(context).clearSnackBars();
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  '${widget.book.title} added to cart!',
-                                ),
-                                duration: const Duration(seconds: 2),
-                                action: SnackBarAction(
-                                  label: 'VIEW CART',
-                                  onPressed: () => context.push('/cart'),
-                                ),
-                              ),
-                            );
+                            _showCartToast(context, widget.book.title);
                           },
                           child: Container(
                             padding: const EdgeInsets.all(4),
@@ -253,6 +258,99 @@ class _BookCardState extends State<BookCard> {
                 ),
               ),
             ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Overlay Toast ───────────────────────────────────────────────────────────
+
+class _CartToast extends StatefulWidget {
+  final String title;
+  final VoidCallback onDone;
+  final VoidCallback onViewCart;
+
+  const _CartToast({
+    required this.title,
+    required this.onDone,
+    required this.onViewCart,
+  });
+
+  @override
+  State<_CartToast> createState() => _CartToastState();
+}
+
+class _CartToastState extends State<_CartToast>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _opacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 300),
+    );
+    _opacity = CurvedAnimation(parent: _ctrl, curve: Curves.easeOut);
+    _ctrl.forward();
+
+    // Auto-dismiss after 2.5 s
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        _ctrl.reverse().then((_) => widget.onDone());
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      bottom: 24,
+      left: 16,
+      right: 16,
+      child: FadeTransition(
+        opacity: _opacity,
+        child: Material(
+          elevation: 6,
+          borderRadius: BorderRadius.circular(10),
+          color: const Color(0xFF323232),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Color(0xFF00C48C), size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '${widget.title} added to cart!',
+                    style: const TextStyle(color: Colors.white, fontSize: 13),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: widget.onViewCart,
+                  child: const Text(
+                    'VIEW CART',
+                    style: TextStyle(
+                      color: Color(0xFF00C48C),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

@@ -146,7 +146,7 @@ class Book {
     );
   }
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMap({bool forLocal = false}) {
     return {
       'id': id,
       'key': key,
@@ -164,8 +164,10 @@ class Book {
       'sellerName': sellerName,
       'uploaderId': uploaderId,
       'timestamp': uploadedAt != null
-          ? Timestamp.fromDate(uploadedAt!)
-          : FieldValue.serverTimestamp(),
+          ? (forLocal
+              ? uploadedAt!.millisecondsSinceEpoch
+              : Timestamp.fromDate(uploadedAt!))
+          : (forLocal ? DateTime.now().millisecondsSinceEpoch : FieldValue.serverTimestamp()),
       'thumbnail': thumbnail,
       'isDonation': isDonation,
       'isbn': isbn,

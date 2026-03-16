@@ -27,9 +27,15 @@ class OrderModel {
       'orderId': id,
       'userId': userId,
       'date': Timestamp.fromDate(date),
-      'items': items.entries.map((e) => {
-        'book': e.key.toMap(),
-        'quantity': e.value,
+      'items': items.entries.map((e) {
+        final bookMap = e.key.toMap();
+        // serverTimestamp() is not allowed inside arrays in Firestore
+        // Unconditionally remove the timestamp to avoid FieldValue subclass issues on Web
+        bookMap.remove('timestamp');
+        return {
+          'book': bookMap,
+          'quantity': e.value,
+        };
       }).toList(),
       'totalAmount': totalAmount,
       'deliveryAddress': deliveryAddress,

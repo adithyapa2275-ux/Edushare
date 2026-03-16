@@ -9,7 +9,6 @@ import 'providers/favorites_provider.dart';
 import 'providers/marketplace_provider.dart';
 import 'widgets/custom_app_bar.dart';
 import 'widgets/book_image.dart';
-import 'widgets/book_card.dart';
 
 class BookDetailsPage extends StatefulWidget {
   final Book book;
@@ -792,14 +791,14 @@ class _SimilarBooksShelf extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 420, // Increased height to completely prevent AspectRatio overflow
+              height: 480, // Increased height to completely prevent overflow
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: displayBooks.length,
                 itemBuilder: (context, index) {
                   return SizedBox(
                     width: 180, // Slightly reduced width for better mobile fit
-                    child: BookCard(book: displayBooks[index]),
+                    child: _RecommendedBookCard(book: displayBooks[index]),
                   );
                 },
               ),
@@ -810,3 +809,163 @@ class _SimilarBooksShelf extends StatelessWidget {
     );
   }
 }
+
+class _RecommendedBookCard extends StatefulWidget {
+  final Book book;
+
+  const _RecommendedBookCard({required this.book});
+
+  @override
+  State<_RecommendedBookCard> createState() => _RecommendedBookCardState();
+}
+
+class _RecommendedBookCardState extends State<_RecommendedBookCard> {
+  bool _isHovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        // Pushes a new book details page, keeping the backstack
+        context.push('/book', extra: widget.book);
+      },
+      child: MouseRegion(
+        onEnter: (_) => setState(() => _isHovered = true),
+        onExit: (_) => setState(() => _isHovered = false),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          transform: Matrix4.translationValues(
+            0.0,
+            _isHovered ? -8.0 : 0.0,
+            0.0,
+          ),
+          margin: const EdgeInsets.only(
+            right: 16,
+            bottom: 16,
+          ), // Spacing between cards
+          decoration: BoxDecoration(
+            color: Theme.of(context).cardColor,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: _isHovered ? 0.15 : 0.05),
+                blurRadius: _isHovered ? 16 : 8,
+                offset: Offset(0, _isHovered ? 8 : 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Image
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(12),
+                ),
+                child: AspectRatio(
+                  aspectRatio: 2 / 3,
+                  child: Stack(
+                    children: [
+                      BookImage(
+                        imageUrl: widget.book.imageUrl,
+                        title: widget.book.title,
+                      ),
+                      if (widget.book.isDonation || widget.book.price == 0)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppColors.secondary,
+                              borderRadius: BorderRadius.circular(4),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.2),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: const Text(
+                              'FREE',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              // Details
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.book.title,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleLarge?.copyWith(fontSize: 16),
+                      maxLines: 2, // Allow 2 lines for title
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      widget.book.author,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      widget.book.isDonation || widget.book.price == 0
+                          ? 'FREE'
+                          : '₹${widget.book.price.toStringAsFixed(0)}',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          // Pushes a new book details page when button is pressed
+                          context.push('/book', extra: widget.book);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFFB641B),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                        ),
+                        child: const Text(
+                          'View / Buy',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              ), // Close Expanded
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
