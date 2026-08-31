@@ -29,6 +29,7 @@ import 'sell_book_page.dart';
 import 'my_listings_page.dart';
 import 'profile_page.dart';
 import 'admin/admin_dashboard_page.dart';
+import 'order_details_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -114,6 +115,17 @@ final GoRouter _router = GoRouter(
     GoRoute(
       path: '/admin',
       builder: (context, state) => const AdminDashboardPage(),
+    ),
+    GoRoute(
+      path: '/order_details',
+      builder: (context, state) {
+        final extras = state.extra as Map<String, dynamic>;
+        return OrderDetailsPage(
+          order: extras['order'],
+          book: extras['book'],
+          quantity: extras['quantity'],
+        );
+      },
     ),
   ],
 );

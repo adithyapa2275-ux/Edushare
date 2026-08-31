@@ -89,17 +89,13 @@ class Book {
   }
 
   double get originalPrice {
-    if (price == 0 || isDonation) return price;
-    // Ensure there's always a visual "cut" price if discount is not set or too small
-    double effectiveDiscount = discountPercentage >= 5.0
-        ? discountPercentage
-        : 25.0;
-    return price / (1 - (effectiveDiscount / 100));
+    if (price == 0 || isDonation || discountPercentage <= 0) return price;
+    return price / (1 - (discountPercentage / 100));
   }
 
   double get effectiveDiscountPercentage {
     if (isDonation || price == 0) return 0.0;
-    return discountPercentage >= 5.0 ? discountPercentage : 25.0;
+    return discountPercentage > 0 ? discountPercentage : 0.0;
   }
 
   factory Book.fromOpenLibrary(Map<String, dynamic> json) {
@@ -193,10 +189,9 @@ class Book {
       price: (map['price'] ?? 0.0).toDouble(),
       discountPercentage: (map['isDonation'] == true)
           ? 0.0
-          : (map['discountPercentage'] != null &&
-                (map['discountPercentage'] as num) > 0)
+          : (map['discountPercentage'] != null)
           ? (map['discountPercentage'] as num).toDouble()
-          : 25.0, // Default 25% if missing or 0
+          : 0.0,
       rating: (map['rating'] ?? 0.0).toDouble(),
       reviewCount: map['reviewCount'] ?? 0,
       imageUrl: map['imageUrl'] ?? '',

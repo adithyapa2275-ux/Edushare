@@ -26,6 +26,7 @@ class _SellBookPageState extends State<SellBookPage> {
   final _titleController = TextEditingController();
   final _authorController = TextEditingController();
   final _priceController = TextEditingController();
+  final _discountController = TextEditingController();
   final _descController = TextEditingController();
   final _imageUrlController = TextEditingController();
   final _isbnController = TextEditingController();
@@ -111,6 +112,9 @@ class _SellBookPageState extends State<SellBookPage> {
           price: _isDonation
               ? 0.0
               : (double.tryParse(_priceController.text) ?? 0.0),
+          discountPercentage: _isDonation
+              ? 0.0
+              : (double.tryParse(_discountController.text) ?? 0.0),
           rating: 0.0,
           reviewCount: 0,
           imageUrl: imageUrl,
@@ -240,7 +244,10 @@ class _SellBookPageState extends State<SellBookPage> {
                     onChanged: (val) {
                       setState(() {
                         _isDonation = val;
-                        if (val) _priceController.text = '0';
+                        if (val) {
+                          _priceController.text = '0';
+                          _discountController.text = '0';
+                        }
                       });
                     },
                   ),
@@ -274,7 +281,7 @@ class _SellBookPageState extends State<SellBookPage> {
                   TextFormField(
                     controller: _priceController,
                     decoration: const InputDecoration(
-                      labelText: 'Price (₹)',
+                      labelText: 'Selling Price (₹)',
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
@@ -289,6 +296,32 @@ class _SellBookPageState extends State<SellBookPage> {
                     },
                   ),
                   const SizedBox(height: 16),
+
+                  // Discount Percentage
+                  if (!_isDonation) ...[
+                    TextFormField(
+                      controller: _discountController,
+                      decoration: const InputDecoration(
+                        labelText: 'Discount Percentage (%)',
+                        hintText: 'e.g. 10 (Optional)',
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                      validator: (value) {
+                        if (value != null && value.isNotEmpty) {
+                          final parsed = double.tryParse(value);
+                          if (parsed == null) {
+                            return 'Invalid discount';
+                          }
+                          if (parsed < 0 || parsed >= 100) {
+                            return 'Discount must be between 0 and 99';
+                          }
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                  ],
 
                   // Image Picker
                   Column(

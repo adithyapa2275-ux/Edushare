@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -6,6 +7,8 @@ import '../models/order_model.dart';
 class OrderProvider extends ChangeNotifier {
   List<OrderModel> _orders = [];
   bool _isLoading = false;
+
+  StreamSubscription<QuerySnapshot>? _ordersSubscription;
 
   List<OrderModel> get orders => List.unmodifiable(_orders);
   bool get isLoading => _isLoading;
@@ -20,42 +23,49 @@ class OrderProvider extends ChangeNotifier {
 
   void clearOrders() {
     _orders.clear();
+    _ordersSubscription?.cancel();
     notifyListeners();
   }
 
-  Future<void> fetchOrders() async {
+  @override
+  void dispose() {
+    _ordersSubscription?.cancel();
+    super.dispose();
+  }
+
+  void fetchOrders() {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
       clearOrders();
       return;
     }
 
-    _isLoading = true;
-    notifyListeners();
+    if (_orders.isEmpty) {
+      _isLoading = true;
+      notifyListeners();
+    }
 
-    try {
-      final snapshot = await FirebaseFirestore.instance
-          .collection('orders')
-          .where('userId', isEqualTo: user.uid)
-          .get();
-
+    _ordersSubscription?.cancel();
+    _ordersSubscription = FirebaseFirestore.instance
+        .collection('orders')
+        .where('userId', isEqualTo: user.uid)
+        .snapshots()
+        .listen((snapshot) {
       final fetchedOrders = snapshot.docs
           .map((doc) => OrderModel.fromMap(doc.data(), doc.id))
           .toList();
           
-      // Local sort by descending date to avoid needing a Firestore composite index
+      // Local sort by descending date
       fetchedOrders.sort((a, b) => b.date.compareTo(a.date));
 
       _orders = fetchedOrders;
-    } catch (e) {
-      debugPrint("Error fetching orders: $e");
-    } finally {
-      if (FirebaseFirestore.instance.app.name.isNotEmpty) {
-         // ensure not cancelled before notify
-      }
       _isLoading = false;
       notifyListeners();
-    }
+    }, onError: (e) {
+      debugPrint("Error fetching orders: $e");
+      _isLoading = false;
+      notifyListeners();
+    });
   }
 
   void addOrder(OrderModel order) {

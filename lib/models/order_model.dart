@@ -63,7 +63,7 @@ class OrderModel {
     }
 
     return OrderModel(
-      id: map['orderId'] ?? docId,
+      id: docId,
       userId: map['userId'] ?? '',
       date: parsedDate,
       items: parsedItems,

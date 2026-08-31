@@ -172,15 +172,26 @@ class _CheckoutPageState extends State<CheckoutPage> {
               orderData['customerName'] = _name; // For convenience
               orderData['itemCount'] = order.items.length; // For convenience
               
-              await FirebaseFirestore.instance.collection('orders').add(orderData);
+              final docRef = await FirebaseFirestore.instance.collection('orders').add(orderData);
+              final realOrderId = docRef.id;
 
               if (!context.mounted) return;
 
               // 2. Save to local OrderProvider for immediate UI update
+              final finalOrder = OrderModel(
+                id: realOrderId,
+                userId: order.userId,
+                date: order.date,
+                items: order.items,
+                totalAmount: order.totalAmount,
+                deliveryAddress: order.deliveryAddress,
+                paymentMethod: order.paymentMethod,
+                status: order.status,
+              );
               Provider.of<OrderProvider>(
                 context,
                 listen: false,
-              ).addOrder(order);
+              ).addOrder(finalOrder);
 
               // 3. Clear Cart
               final cart = Provider.of<CartProvider>(context, listen: false);

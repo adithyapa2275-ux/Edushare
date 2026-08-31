@@ -224,7 +224,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                 },
                               ),
                               const SizedBox(height: 16),
-                              _buildTextField(
+                             _buildTextField( //edit duude
                                 controller: _phoneController,
                                 icon: Icons.phone_outlined,
                                 hintText: "Phone Number",

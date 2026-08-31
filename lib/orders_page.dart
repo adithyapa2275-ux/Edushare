@@ -26,6 +26,10 @@ class _OrdersPageState extends State<OrdersPage> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('My Orders'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/home'),
+        ),
         backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
         foregroundColor: Theme.of(context).appBarTheme.iconTheme?.color,
         elevation: 1,
@@ -56,7 +60,7 @@ class _OrdersPageState extends State<OrdersPage> {
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => context.go('/home'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.secondary,
                     ),
@@ -105,8 +109,11 @@ class _OrdersPageState extends State<OrdersPage> {
 
                     return InkWell(
                       onTap: () {
-                        // Navigate to specific Book Details
-                        context.push('/book', extra: book);
+                        context.push('/order_details', extra: {
+                          'order': order,
+                          'book': book,
+                          'quantity': item['quantity'],
+                        });
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),

@@ -633,27 +633,7 @@ class _LoginPageState extends State<LoginPage>
                                                       ),
                                                     ),
                                                   ),
-                                                  const Spacer(),
-                                                  MouseRegion(
-                                                    cursor: SystemMouseCursors
-                                                        .click,
-                                                    child: GestureDetector(
-                                                      onTap: () {
-                                                        // Forgot password action
-                                                      },
-                                                      child: Text(
-                                                        'Forgot Password?',
-                                                        style: TextStyle(
-                                                          color: const Color(
-                                                            0xFF3B82F6,
-                                                          ),
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          fontSize: 14,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
+
                                                 ],
                                               ),
                                               SizedBox(
@@ -1056,20 +1036,7 @@ class _LoginPageState extends State<LoginPage>
                         ],
                       ),
                     ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () {
-                        // Forgot password action
-                      },
-                      child: Text(
-                        'Forgot Password?',
-                        style: TextStyle(
-                          color: const Color(0xFF3B82F6),
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
+
                   ],
                 ),
                 const SizedBox(height: 24),
